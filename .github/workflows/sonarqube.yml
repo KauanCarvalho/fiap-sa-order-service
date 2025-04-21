@@ -1,0 +1,55 @@
+name: Sonar Cloud
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        ports: ['3306:3306']
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: fiap_sa_order_service_test
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DB_USER: ${{ secrets.TEST_CI_DB_USER }}
+      DB_HOST: ${{ secrets.TEST_CI_DB_HOST }}
+      DB_PORT: ${{ secrets.TEST_CI_DB_PORT }}
+      DB_NAME: ${{ secrets.TEST_CI_DB_NAME }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24.2
+
+      - name: Install dependencies
+        run: go mod download -x
+
+      - name: Run tests and generate coverage
+        run: go test ./... -coverprofile=coverage.out -covermode=atomic
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          args: >
+            -Dsonar.projectKey=KauanCarvalho_fiap-sa-order-service
+            -Dsonar.organization=kauancarvalho
+            -Dsonar.go.coverage.reportPaths=coverage.out
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
