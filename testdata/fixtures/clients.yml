@@ -1,0 +1,13 @@
+# Foo.
+- id: 1
+  name: Foo
+  cpf: "20681201002"
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()
+
+# Bar.
+- id: 2
+  name: Bar
+  cpf: "07644959092"
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()

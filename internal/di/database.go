@@ -2,10 +2,12 @@ package di
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/config"
+	"github.com/go-testfixtures/testfixtures/v3"
 
 	gormMySQL "gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -59,5 +61,13 @@ func formatDSN(cfg *config.Config) string {
 		cfg.DatabaseHost,
 		cfg.DatabasePort,
 		cfg.DatabaseName,
+	)
+}
+
+func SetupFixtures(db *sql.DB, path string) (*testfixtures.Loader, error) {
+	return testfixtures.New(
+		testfixtures.Database(db),
+		testfixtures.Dialect("mysql"),
+		testfixtures.Directory(path),
 	)
 }
