@@ -40,6 +40,22 @@ jobs:
       - name: Install dependencies
         run: go mod download -x
 
+      - name: Wait for MySQL
+        run: |
+          until nc -z -v -w30 $DB_HOST $DB_PORT; do
+            echo "Waiting for MySQL..."
+            sleep 1
+          done
+
+      - name: Install migrate
+        run: go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+      - name: Run database migrations
+        run: |
+          DATABASE_URL="mysql://${DB_USER}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_NAME}?charset=utf8mb4&parseTime=true"
+          echo "Running migrations..."
+          migrate -verbose -database "$DATABASE_URL" -path ./migrations up
+
       - name: Run tests and generate coverage
         run: go test -coverprofile=coverage.out ./...
 

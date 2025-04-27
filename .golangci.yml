@@ -444,6 +444,7 @@ linters:
           - noctx
           - wrapcheck
           - depguard
+          - errorlint
       - path: 'swagger/docs.go'
         linters:
           - gochecknoglobals

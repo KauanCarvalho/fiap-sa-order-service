@@ -1,14 +1,17 @@
 package datastore
 
 import (
+	"errors"
 	"time"
 
-	"github.com/KauanCarvalho/fiap-sa-order-service/internal/domain"
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain"
 
 	"gorm.io/gorm"
 )
 
 const DefaultConnectionTimeout = 5 * time.Second
+
+var ErrExistingRecord = errors.New("record already exists")
 
 type datastore struct {
 	db *gorm.DB

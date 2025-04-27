@@ -8,17 +8,19 @@ import (
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/datastore"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/config"
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/di"
-	"github.com/KauanCarvalho/fiap-sa-order-service/internal/domain"
+	"github.com/go-testfixtures/testfixtures/v3"
 
 	"gorm.io/gorm"
 )
 
 var (
-	ctx   context.Context
-	cfg   *config.Config
-	sqlDB *gorm.DB
-	ds    domain.Datastore
+	ctx      context.Context
+	cfg      *config.Config
+	sqlDB    *gorm.DB
+	fixtures *testfixtures.Loader
+	ds       domain.Datastore
 )
 
 func TestMain(m *testing.M) {
@@ -31,7 +33,23 @@ func TestMain(m *testing.M) {
 		log.Fatalf("error when creating database connection pool: %v", err)
 	}
 
+	db, dbErr := sqlDB.DB()
+	if dbErr != nil {
+		log.Fatalf("error when getting database connection: %v", dbErr)
+	}
+
+	fixtures, err = di.SetupFixtures(db, "../../../testdata/fixtures")
+	if err != nil {
+		log.Fatalf("error when initializing fixtures: %v", err)
+	}
+
 	ds = datastore.NewDatastore(sqlDB)
 
 	os.Exit(m.Run())
+}
+
+func prepareTestDatabase() {
+	if err := fixtures.Load(); err != nil {
+		log.Fatalf("error when loading fixtures: %v", err)
+	}
 }
