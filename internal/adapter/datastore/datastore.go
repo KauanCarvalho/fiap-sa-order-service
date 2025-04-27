@@ -12,6 +12,7 @@ import (
 const DefaultConnectionTimeout = 5 * time.Second
 
 var ErrExistingRecord = errors.New("record already exists")
+var ErrOrderNotFound = errors.New("order not found")
 
 type datastore struct {
 	db *gorm.DB

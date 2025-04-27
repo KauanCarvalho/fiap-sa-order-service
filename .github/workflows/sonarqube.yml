@@ -28,6 +28,7 @@ jobs:
       DB_PORT: ${{ secrets.TEST_CI_DB_PORT }}
       DB_NAME: ${{ secrets.TEST_CI_DB_NAME }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      PRODUCT_SERVICE_URL: ${{ secrets.TEST_PRODUCT_SERVICE_URL }}
 
     steps:
       - name: Checkout repository

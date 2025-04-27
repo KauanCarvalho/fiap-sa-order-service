@@ -41,6 +41,8 @@ func getErrorMessage(fieldError validator.FieldError) string {
 		return "This field must be greater than " + fieldError.Param()
 	case "max":
 		return "This field must have at most " + fieldError.Param() + " elements"
+	case "min":
+		return "This field must have at least " + fieldError.Param() + " elements"
 	default:
 		return fieldError.Error()
 	}

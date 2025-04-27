@@ -41,3 +41,36 @@ func TestNewInternalError(t *testing.T) {
 		assert.Equal(t, "database connection failed", internalErr.(*sharedErrors.InternalError).Reason.Error())
 	})
 }
+
+func TestExteralError_Error(t *testing.T) {
+	t.Run("returns error with message only", func(t *testing.T) {
+		externalErr := sharedErrors.NewExternalError("Something went wrong", nil)
+
+		assert.Equal(t, "External Error: Something went wrong", externalErr.Error())
+	})
+
+	t.Run("returns error with message and cause", func(t *testing.T) {
+		causeErr := errors.New("database connection failed")
+		externalErr := sharedErrors.NewExternalError("Something went wrong", causeErr)
+
+		expectedError := "External Error: Something went wrong | Cause: database connection failed"
+		assert.Equal(t, expectedError, externalErr.Error())
+	})
+}
+
+func TestNewExternalError(t *testing.T) {
+	t.Run("creates ExternalError with no cause", func(t *testing.T) {
+		externalErr := sharedErrors.NewExternalError("Something went wrong", nil)
+
+		assert.Equal(t, "Something went wrong", externalErr.(*sharedErrors.ExternalError).Message)
+		assert.NoError(t, externalErr.(*sharedErrors.ExternalError).Reason)
+	})
+
+	t.Run("creates ExternalError with a cause", func(t *testing.T) {
+		causeErr := errors.New("database connection failed")
+		externalErr := sharedErrors.NewExternalError("Something went wrong", causeErr)
+
+		assert.Equal(t, "Something went wrong", externalErr.(*sharedErrors.ExternalError).Message)
+		assert.Equal(t, "database connection failed", externalErr.(*sharedErrors.ExternalError).Reason.Error())
+	})
+}

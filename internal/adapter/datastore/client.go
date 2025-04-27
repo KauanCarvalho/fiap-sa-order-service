@@ -22,6 +22,18 @@ func (d *datastore) CreateClient(ctx context.Context, client *entities.Client) e
 	return nil
 }
 
+func (d *datastore) GetClientByID(ctx context.Context, id uint) (*entities.Client, error) {
+	var client entities.Client
+
+	if err := d.db.WithContext(ctx).Where("id = ?", id).First(&client).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		return nil, internalErrors.NewInternalError("failed to get client by ID", err)
+	}
+	return &client, nil
+}
+
 func (d *datastore) GetClientByCpf(ctx context.Context, cpf string) (*entities.Client, error) {
 	var client entities.Client
 

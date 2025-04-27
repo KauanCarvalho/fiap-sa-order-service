@@ -12,16 +12,22 @@ services:
       - ./testdata/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 3306:3306
+    networks:
+      - shared_network
 
   app:
     container_name: fiap_sa_order_service_app
     ports:
       - 8082:8082
-    depends_on:
-      - mysql
     volumes:
       - .:/app
     build:
       context: .
       target: dev
     command: tail -f /dev/null
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    external: true

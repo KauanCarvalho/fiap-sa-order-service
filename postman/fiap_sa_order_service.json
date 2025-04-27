@@ -1,0 +1,622 @@
+{
+	"info": {
+		"_postman_id": "753d91a5-75fc-4f0f-a301-aea905aa8519",
+		"name": "FIAP - Fast Food",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "10219511",
+		"_collection_link": "https://fiap-software-architecture-7128.postman.co/workspace/fiap-sa-order-service~cd4a24db-1704-46d4-9581-5ca85f63b980/collection/10219511-753d91a5-75fc-4f0f-a301-aea905aa8519?action=share&source=collection_link&creator=10219511"
+	},
+	"item": [
+		{
+			"name": "infrastructure",
+			"item": [
+				{
+					"name": "Healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/healthcheck"
+					},
+					"response": [
+						{
+							"name": "200 - Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/healthcheck"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "X-Request-Id",
+									"value": "fiap-sa-order-service-ce9c8395-6529-421c-bd11-f3402f290e5a"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 24 Apr 2025 23:27:08 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "15"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"ok\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "api",
+			"item": [
+				{
+					"name": "v1",
+					"item": [
+						{
+							"name": "clients",
+							"item": [
+								{
+									"name": "Create",
+									"event": [
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"const uuid = () => crypto.randomUUID();\r",
+													"pm.variables.set(\"uuid\", uuid());\r",
+													"\r",
+													"function generateCPF() {\r",
+													"    function randomDigit() {\r",
+													"        return Math.floor(Math.random() * 10);\r",
+													"    }\r",
+													"\r",
+													"    let numbers = [];\r",
+													"    for (let i = 0; i < 9; i++) {\r",
+													"        numbers.push(randomDigit());\r",
+													"    }\r",
+													"\r",
+													"    let sum = numbers.map((n, i) => n * (10 - i)).reduce((a, b) => a + b, 0);\r",
+													"    let firstDigit = sum % 11 < 2 ? 0 : 11 - (sum % 11);\r",
+													"    numbers.push(firstDigit);\r",
+													"\r",
+													"    sum = numbers.map((n, i) => n * (11 - i)).reduce((a, b) => a + b, 0);\r",
+													"    let secondDigit = sum % 11 < 2 ? 0 : 11 - (sum % 11);\r",
+													"    numbers.push(secondDigit);\r",
+													"\r",
+													"    return numbers.join('');\r",
+													"}\r",
+													"\r",
+													"const cpf = generateCPF();\r",
+													"pm.variables.set(\"cpf\", cpf);"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										},
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 201) {\r",
+													"    const responseJson = pm.response.json();\r",
+													"    const cpf = responseJson.cpf;\r",
+													"    pm.environment.set(\"cpf\", cpf);\r",
+													"\r",
+													"    const client_id = responseJson.id\r",
+													"    pm.environment.set(\"cliennt_id\", client_id)\r",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"name\": \"name {{uuid}}\",\r\n    \"cpf\": \"{{cpf}}\"\r\n}\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": "{{base_url}}/api/v1/clients"
+									},
+									"response": [
+										{
+											"name": "409 - Failure",
+											"originalRequest": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"name\": \"name {{uuid}}\",\r\n    \"cpf\": \"52145269622\"\r\n}\r\n",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": "{{base_url}}/api/v1/clients/"
+											},
+											"status": "Conflict",
+											"code": 409,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "X-Request-Id",
+													"value": "fiap-sa-order-service-7d60b6ad-99cd-4016-9d38-7ba36c343e24"
+												},
+												{
+													"key": "Date",
+													"value": "Sun, 27 Apr 2025 19:45:08 GMT"
+												},
+												{
+													"key": "Content-Length",
+													"value": "59"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"errors\": [\n        {\n            \"field\": \"cpf\",\n            \"message\": \"cpf already exists\"\n        }\n    ]\n}"
+										},
+										{
+											"name": "201 - Success",
+											"originalRequest": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"name\": \"name {{uuid}}\",\r\n    \"cpf\": \"{{cpf}}\"\r\n}\r\n",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": "{{base_url}}/api/v1/clients"
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "X-Request-Id",
+													"value": "fiap-sa-order-service-f2481c5a-56c6-44b0-b366-401ae4b283a5"
+												},
+												{
+													"key": "Date",
+													"value": "Sun, 27 Apr 2025 19:46:02 GMT"
+												},
+												{
+													"key": "Content-Length",
+													"value": "159"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"id\": 3,\n    \"name\": \"name 76be07bd-5a33-4617-8c38-236957a05ca2\",\n    \"cpf\": \"62067909401\",\n    \"created_at\": \"2025-04-27T19:46:02.516Z\",\n    \"updated_at\": \"2025-04-27T19:46:02.516Z\"\n}"
+										}
+									]
+								},
+								{
+									"name": "Show",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 200) {\r",
+													"    const responseJson = pm.response.json();\r",
+													"    const cpf = responseJson.cpf;\r",
+													"\r",
+													"    pm.environment.set(\"cpf\", cpf);\r",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": "{{base_url}}/api/v1/clients/{{cpf}}"
+									},
+									"response": [
+										{
+											"name": "404 - Failure",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": "{{base_url}}/api/v1/clients/{{cpf}}/"
+											},
+											"status": "Not Found",
+											"code": 404,
+											"_postman_previewlanguage": "plain",
+											"header": [
+												{
+													"key": "X-Request-Id",
+													"value": "fiap-sa-order-service-77b3337e-c9f1-46d5-90ce-e24788f771b0"
+												},
+												{
+													"key": "Date",
+													"value": "Sun, 27 Apr 2025 19:52:52 GMT"
+												},
+												{
+													"key": "Content-Length",
+													"value": "0"
+												}
+											],
+											"cookie": [],
+											"body": null
+										},
+										{
+											"name": "200 - Success",
+											"originalRequest": {
+												"method": "GET",
+												"header": [],
+												"url": "{{base_url}}/api/v1/clients/{{cpf}}/"
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "X-Request-Id",
+													"value": "fiap-sa-order-service-6da3a1f7-aeb9-45eb-aac7-fddad959eeab"
+												},
+												{
+													"key": "Date",
+													"value": "Sun, 27 Apr 2025 19:55:05 GMT"
+												},
+												{
+													"key": "Content-Length",
+													"value": "151"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"id\": 8,\n    \"name\": \"name 75f7caaa-7e2f-4610-a79b-1b31bc6eafcd\",\n    \"cpf\": \"09744975334\",\n    \"created_at\": \"2025-04-27T19:54:42Z\",\n    \"updated_at\": \"2025-04-27T19:54:42Z\"\n}"
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "checkout",
+							"item": [
+								{
+									"name": "Create",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 201) {\r",
+													"    const responseJson = pm.response.json();\r",
+													"    const order_id = responseJson.id;\r",
+													"    pm.environment.set(\"order_id\", order_id);\r",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"client_id\": {{client_id}},\r\n  \"items\": [\r\n    {\r\n      \"sku\": \"{{sku}}\",\r\n      \"quantity\": 2\r\n    }\r\n  ]\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": "{{base_url}}/api/v1/checkout"
+									},
+									"response": [
+										{
+											"name": "200 - Success",
+											"originalRequest": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"client_id\": {{client_id}},\r\n  \"items\": [\r\n    {\r\n      \"sku\": \"{{sku}}\",\r\n      \"quantity\": 2\r\n    }\r\n  ]\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": "{{base_url}}/api/v1/checkout"
+											},
+											"status": "Created",
+											"code": 201,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "X-Request-Id",
+													"value": "fiap-sa-order-service-4ad09317-7af5-44bc-bd53-7999c2116721"
+												},
+												{
+													"key": "Date",
+													"value": "Mon, 28 Apr 2025 01:31:32 GMT"
+												},
+												{
+													"key": "Content-Length",
+													"value": "210"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"id\": 1,\n    \"client_id\": 1,\n    \"status\": \"\",\n    \"price\": 114.52,\n    \"created_at\": \"0001-01-01T00:00:00Z\",\n    \"updated_at\": \"0001-01-01T00:00:00Z\",\n    \"items\": [\n        {\n            \"sku\": \"name-2fd7a3fb-d36f-4767-80c4-eccd3c917ac4\",\n            \"quantity\": 2,\n            \"price\": 57.26\n        }\n    ]\n}"
+										},
+										{
+											"name": "400 - Failure",
+											"originalRequest": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"client_id\": 23123,\r\n  \"items\": [\r\n    {\r\n      \"sku\": \"{{sku}}\",\r\n      \"quantity\": 2\r\n    }\r\n  ]\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": "{{base_url}}/api/v1/checkout"
+											},
+											"status": "Bad Request",
+											"code": 400,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "X-Request-Id",
+													"value": "fiap-sa-order-service-fed29884-7915-476a-97c1-8715df8783aa"
+												},
+												{
+													"key": "Date",
+													"value": "Mon, 28 Apr 2025 01:32:02 GMT"
+												},
+												{
+													"key": "Content-Length",
+													"value": "63"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"errors\": [\n        {\n            \"field\": \"client_id\",\n            \"message\": \"client not found\"\n        }\n    ]\n}"
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "admin",
+							"item": [
+								{
+									"name": "orders",
+									"item": [
+										{
+											"name": "Update",
+											"request": {
+												"method": "PATCH",
+												"header": [],
+												"url": "{{base_url}}/api/v1/admin/orders/{{order_id}}/ready"
+											},
+											"response": [
+												{
+													"name": "204 - Success",
+													"originalRequest": {
+														"method": "PATCH",
+														"header": [],
+														"url": "{{base_url}}/api/v1/admin/orders/{{order_id}}/ready"
+													},
+													"status": "No Content",
+													"code": 204,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json; charset=utf-8"
+														},
+														{
+															"key": "X-Request-Id",
+															"value": "fiap-sa-order-service-1bb20188-bf5f-4bf3-ac32-c53930494e38"
+														},
+														{
+															"key": "Date",
+															"value": "Mon, 28 Apr 2025 02:13:20 GMT"
+														}
+													],
+													"cookie": [],
+													"body": null
+												},
+												{
+													"name": "400 - Failure",
+													"originalRequest": {
+														"method": "PATCH",
+														"header": [],
+														"url": "{{base_url}}/api/v1/admin/orders/{{order_id}}/readysasa"
+													},
+													"status": "Bad Request",
+													"code": 400,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json; charset=utf-8"
+														},
+														{
+															"key": "X-Request-Id",
+															"value": "fiap-sa-order-service-aa775d45-8340-4762-94f2-edafdb621ea6"
+														},
+														{
+															"key": "Date",
+															"value": "Mon, 28 Apr 2025 02:21:20 GMT"
+														},
+														{
+															"key": "Content-Length",
+															"value": "64"
+														}
+													],
+													"cookie": [],
+													"body": "{\n    \"errors\": [\n        {\n            \"field\": \"status\",\n            \"message\": \"Invalid order status\"\n        }\n    ]\n}"
+												},
+												{
+													"name": "404 - Failure",
+													"originalRequest": {
+														"method": "PATCH",
+														"header": [],
+														"url": "{{base_url}}/api/v1/admin/orders/3232322332/ready"
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json; charset=utf-8"
+														},
+														{
+															"key": "X-Request-Id",
+															"value": "fiap-sa-order-service-7c23f4df-ba85-41b9-8220-90773e1d80d4"
+														},
+														{
+															"key": "Date",
+															"value": "Mon, 28 Apr 2025 02:21:46 GMT"
+														},
+														{
+															"key": "Content-Length",
+															"value": "60"
+														}
+													],
+													"cookie": [],
+													"body": "{\n    \"errors\": [\n        {\n            \"field\": \"orderID\",\n            \"message\": \"Order not found\"\n        }\n    ]\n}"
+												}
+											]
+										},
+										{
+											"name": "Index",
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{base_url}}/api/v1/admin/orders?page=1&pageSize=3",
+													"host": [
+														"{{base_url}}"
+													],
+													"path": [
+														"api",
+														"v1",
+														"admin",
+														"orders"
+													],
+													"query": [
+														{
+															"key": "page",
+															"value": "1"
+														},
+														{
+															"key": "pageSize",
+															"value": "3"
+														}
+													]
+												}
+											},
+											"response": [
+												{
+													"name": "200 - Success",
+													"originalRequest": {
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{base_url}}/api/v1/admin/orders?page=1&pageSize=3",
+															"host": [
+																"{{base_url}}"
+															],
+															"path": [
+																"api",
+																"v1",
+																"admin",
+																"orders"
+															],
+															"query": [
+																{
+																	"key": "page",
+																	"value": "1"
+																},
+																{
+																	"key": "pageSize",
+																	"value": "3"
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json; charset=utf-8"
+														},
+														{
+															"key": "X-Request-Id",
+															"value": "fiap-sa-order-service-5260f5d6-9a8f-48f1-8bf5-adf2da147d3b"
+														},
+														{
+															"key": "Date",
+															"value": "Mon, 28 Apr 2025 04:03:09 GMT"
+														},
+														{
+															"key": "Content-Length",
+															"value": "655"
+														}
+													],
+													"cookie": [],
+													"body": "[\n    {\n        \"id\": 5,\n        \"client_id\": 1,\n        \"status\": \"pending\",\n        \"price\": 114.52,\n        \"created_at\": \"2025-04-28T04:00:03Z\",\n        \"updated_at\": \"2025-04-28T04:00:03Z\",\n        \"items\": [\n            {\n                \"sku\": \"name-2fd7a3fb-d36f-4767-80c4-eccd3c917ac4\",\n                \"quantity\": 2,\n                \"price\": 57.26\n            }\n        ]\n    },\n    {\n        \"id\": 6,\n        \"client_id\": 1,\n        \"status\": \"pending\",\n        \"price\": 114.52,\n        \"created_at\": \"2025-04-28T04:00:19Z\",\n        \"updated_at\": \"2025-04-28T04:00:19Z\",\n        \"items\": [\n            {\n                \"sku\": \"name-2fd7a3fb-d36f-4767-80c4-eccd3c917ac4\",\n                \"quantity\": 2,\n                \"price\": 57.26\n            }\n        ]\n    },\n    {\n        \"id\": 7,\n        \"client_id\": 1,\n        \"status\": \"pending\",\n        \"price\": 114.52,\n        \"created_at\": \"2025-04-28T04:00:52Z\",\n        \"updated_at\": \"2025-04-28T04:00:52Z\",\n        \"items\": [\n            {\n                \"sku\": \"name-2fd7a3fb-d36f-4767-80c4-eccd3c917ac4\",\n                \"quantity\": 2,\n                \"price\": 57.26\n            }\n        ]\n    }\n]"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

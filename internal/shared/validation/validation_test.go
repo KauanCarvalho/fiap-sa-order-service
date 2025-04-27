@@ -67,6 +67,25 @@ func TestHandleValidationError(t *testing.T) {
 		assert.Equal(t, "This field must have at most 5 elements", validationErrors[0].Message)
 	})
 
+	t.Run("validates min error", func(t *testing.T) {
+		type User struct {
+			Username string `validate:"min=5"`
+		}
+
+		validate := validator.New()
+		user := User{
+			Username: "abc",
+		}
+
+		err := validate.Struct(user)
+
+		validationErrors := validation.HandleValidationError(err)
+
+		require.Len(t, validationErrors, 1)
+		assert.Equal(t, "Username", validationErrors[0].Field)
+		assert.Equal(t, "This field must have at least 5 elements", validationErrors[0].Message)
+	})
+
 	t.Run("validates generic error", func(t *testing.T) {
 		err := validation.HandleValidationError(errors.New("Something went wrong"))
 

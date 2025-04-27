@@ -24,6 +24,8 @@ var (
 	ds       domain.Datastore
 	cc       usecase.CreateClientUseCase
 	gc       usecase.GetClientUseCase
+	gp       usecase.GetPaginatedOrdersUseCase
+	up       usecase.UpdateOrderUseCase
 )
 
 func TestMain(m *testing.M) {
@@ -49,6 +51,8 @@ func TestMain(m *testing.M) {
 	ds = datastore.NewDatastore(sqlDB)
 	cc = usecase.NewCreateClientUseCase(ds)
 	gc = usecase.NewGetClientUseCase(ds)
+	up = usecase.NewUpdateOrderUseCase(ds)
+	gp = usecase.NewGetPaginatedOrdersUseCase(ds)
 
 	os.Exit(m.Run())
 }
