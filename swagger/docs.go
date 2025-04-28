@@ -26,6 +26,245 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/admin/orders": {
+            "get": {
+                "description": "Get paginated orders.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order admin"
+                ],
+                "summary": "Get paginated orders.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "page size",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.ClientOutput"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/{orderID}/{status}": {
+            "patch": {
+                "description": "Update order status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Order admin"
+                ],
+                "summary": "Update order status.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "order id",
+                        "name": "orderID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "order status",
+                        "name": "status",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/clients/": {
+            "post": {
+                "description": "Create client.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Create client.",
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "client",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_core_usecase_dto.ClientInputCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.ClientOutput"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/clients/{cpf}": {
+            "get": {
+                "description": "Get client by CPF.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Get client by CPF.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "client cpf",
+                        "name": "cpf",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.ClientOutput"
+                        }
+                    },
+                    "404": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/": {
+            "post": {
+                "description": "Create order.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Checkout"
+                ],
+                "summary": "Create order.",
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_core_usecase_dto.OrderInputCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.OrderOutput"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.APIErrorsOutput"
+                        }
+                    }
+                }
+            }
+        },
         "/healthcheck": {
             "get": {
                 "description": "Checks the health of the application (connection to database)",
@@ -82,10 +321,124 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.ClientOutput": {
+            "type": "object",
+            "properties": {
+                "cpf": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.HealthCheckOutput": {
             "type": "object",
             "properties": {
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.OrderItemOutput": {
+            "type": "object",
+            "properties": {
+                "price": {
+                    "type": "number"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.OrderOutput": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_application_dto.OrderItemOutput"
+                    }
+                },
+                "price": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_KauanCarvalho_fiap-sa-order-service_internal_core_usecase_dto.ClientInputCreate": {
+            "type": "object",
+            "required": [
+                "cpf",
+                "name"
+            ],
+            "properties": {
+                "cpf": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "github_com_KauanCarvalho_fiap-sa-order-service_internal_core_usecase_dto.OrderInputCreate": {
+            "type": "object",
+            "required": [
+                "client_id",
+                "items"
+            ],
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/github_com_KauanCarvalho_fiap-sa-order-service_internal_core_usecase_dto.OrderItemInputCreate"
+                    }
+                }
+            }
+        },
+        "github_com_KauanCarvalho_fiap-sa-order-service_internal_core_usecase_dto.OrderItemInputCreate": {
+            "type": "object",
+            "required": [
+                "quantity",
+                "sku"
+            ],
+            "properties": {
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "sku": {
                     "type": "string"
                 }
             }
@@ -96,7 +449,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.0.1",
-	Host:             "fa-sa-Order-service",
+	Host:             "fa-sa-order-service",
 	BasePath:         "",
 	Schemes:          []string{"http"},
 	Title:            "Fiap SA Order Service",

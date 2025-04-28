@@ -15,15 +15,15 @@ type CreateClientUseCase interface {
 	Run(ctx context.Context, input dto.ClientInputCreate) (*entities.Client, error)
 }
 
-type createClientsUseCase struct {
+type createClientUseCase struct {
 	ds domain.Datastore
 }
 
 func NewCreateClientUseCase(ds domain.Datastore) CreateClientUseCase {
-	return &createClientsUseCase{ds: ds}
+	return &createClientUseCase{ds: ds}
 }
 
-func (c *createClientsUseCase) Run(ctx context.Context, input dto.ClientInputCreate) (*entities.Client, error) {
+func (c *createClientUseCase) Run(ctx context.Context, input dto.ClientInputCreate) (*entities.Client, error) {
 	existentClient, err := c.ds.GetClientByCpf(ctx, input.CPF)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err

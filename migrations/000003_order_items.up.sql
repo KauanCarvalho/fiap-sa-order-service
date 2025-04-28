@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS `order_items` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `order_id` INT UNSIGNED NOT NULL,
+    `sku` VARCHAR(50) NOT NULL,
+    `quantity` INT NOT NULL,
+    `price` DECIMAL(10, 2) NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`),
+    INDEX `ix_sku` (`sku`)
+);

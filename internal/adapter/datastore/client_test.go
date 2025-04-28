@@ -43,6 +43,22 @@ func TestCreateClient(t *testing.T) {
 	})
 }
 
+func TestGetClientByID(t *testing.T) {
+	prepareTestDatabase()
+
+	t.Run("successfully gets client by ID", func(t *testing.T) {
+		found, err := ds.GetClientByID(ctx, 1)
+		require.NoError(t, err)
+		assert.Equal(t, uint(1), found.ID)
+	})
+
+	t.Run("returns error when client not found", func(t *testing.T) {
+		found, err := ds.GetClientByID(ctx, 999)
+		assert.Nil(t, found)
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	})
+}
+
 func TestGetClientByCpf(t *testing.T) {
 	prepareTestDatabase()
 

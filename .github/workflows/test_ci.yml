@@ -26,6 +26,7 @@ jobs:
       DB_HOST: ${{ secrets.TEST_CI_DB_HOST }}
       DB_PORT: ${{ secrets.TEST_CI_DB_PORT }}
       DB_NAME: ${{ secrets.TEST_CI_DB_NAME }}
+      PRODUCT_SERVICE_URL: ${{ secrets.TEST_PRODUCT_SERVICE_URL }}
 
     steps:
       - name: Checkout repository

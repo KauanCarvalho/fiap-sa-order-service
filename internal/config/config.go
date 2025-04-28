@@ -16,6 +16,7 @@ type Config struct {
 	DatabaseMaxOpenConns int
 	DatabaseMaxIdleConns int
 	Port                 string
+	ProductServiceURL    string
 }
 
 const (
@@ -42,6 +43,7 @@ func Load() *Config {
 		DatabaseMaxOpenConns: getEnvAsInt("DB_MAX_OPEN_CONNS", defaultDatabaseMaxOpenConns),
 		DatabaseMaxIdleConns: getEnvAsInt("DB_MAX_IDLE_CONNS", defaultDatabaseMaxIdleConns),
 		Port:                 getEnv("PORT", "8082"),
+		ProductServiceURL:    fetchEnv("PRODUCT_SERVICE_URL"),
 	}
 
 	return config

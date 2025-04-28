@@ -7,6 +7,7 @@ import (
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/application/mock"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain/entities"
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase/ports"
 
 	"github.com/stretchr/testify/require"
 )
@@ -55,6 +56,30 @@ func TestDatastoreMock_CreateClient(t *testing.T) {
 	})
 }
 
+func TestDatastoreMock_GetClientById(t *testing.T) {
+	t.Run("when GetClientByIDFn is defined, it returns the custom error", func(t *testing.T) {
+		expectedErr := errors.New("db unavailable")
+
+		ds := &mock.DatastoreMock{
+			GetClientByIDFn: func(_ context.Context, _ uint) (*entities.Client, error) {
+				return nil, expectedErr
+			},
+		}
+
+		client, err := ds.GetClientByID(ctx, 1)
+		require.ErrorIs(t, err, expectedErr)
+		require.Nil(t, client)
+	})
+
+	t.Run("when GetClientByIDfn is not defined, it returns ErrFunctionNotImplemented", func(t *testing.T) {
+		ds := &mock.DatastoreMock{}
+
+		client, err := ds.GetClientByID(ctx, 1)
+		require.ErrorIs(t, err, mock.ErrFunctionNotImplemented)
+		require.Nil(t, client)
+	})
+}
+
 func TestDatastoreMock_GetClientByCpf(t *testing.T) {
 	t.Run("when GetClientByCpfFn is defined, it returns the custom error", func(t *testing.T) {
 		expectedErr := errors.New("db unavailable")
@@ -76,5 +101,73 @@ func TestDatastoreMock_GetClientByCpf(t *testing.T) {
 		client, err := ds.GetClientByCpf(ctx, "")
 		require.ErrorIs(t, err, mock.ErrFunctionNotImplemented)
 		require.Nil(t, client)
+	})
+}
+
+func TestDatastoreMock_CreateOrder(t *testing.T) {
+	t.Run("when CreateOrderFn is defined, it returns the custom error", func(t *testing.T) {
+		expectedErr := errors.New("db unavailable")
+
+		ds := &mock.DatastoreMock{
+			CreateOrderFn: func(_ context.Context, _ *entities.Order) error {
+				return expectedErr
+			},
+		}
+
+		err := ds.CreateOrder(ctx, nil)
+		require.ErrorIs(t, err, expectedErr)
+	})
+
+	t.Run("when CreateOrderFn is not defined, it returns ErrFunctionNotImplemented", func(t *testing.T) {
+		ds := &mock.DatastoreMock{}
+
+		err := ds.CreateOrder(ctx, nil)
+		require.ErrorIs(t, err, mock.ErrFunctionNotImplemented)
+	})
+}
+
+func TestDatastoreMock_UpdateOrderStatus(t *testing.T) {
+	t.Run("when UpdateOrderStatusFn is defined, it returns the custom error", func(t *testing.T) {
+		expectedErr := errors.New("db unavailable")
+
+		ds := &mock.DatastoreMock{
+			UpdateOrderStatusFn: func(_ context.Context, _ uint, _ string) error {
+				return expectedErr
+			},
+		}
+
+		err := ds.UpdateOrderStatus(ctx, 1, "pending")
+		require.ErrorIs(t, err, expectedErr)
+	})
+
+	t.Run("when UpdateOrderStatusFn is not defined, it returns ErrFunctionNotImplemented", func(t *testing.T) {
+		ds := &mock.DatastoreMock{}
+
+		err := ds.UpdateOrderStatus(ctx, 1, "pending")
+		require.ErrorIs(t, err, mock.ErrFunctionNotImplemented)
+	})
+}
+
+func TestDatastoreMock_GetPaginatedOrders(t *testing.T) {
+	t.Run("when GetPaginatedOrdersFn is defined, it returns the custom error", func(t *testing.T) {
+		expectedErr := errors.New("db unavailable")
+
+		ds := &mock.DatastoreMock{
+			GetPaginatedOrdersFn: func(_ context.Context, _ ports.Filter) ([]*entities.Order, error) {
+				return nil, expectedErr
+			},
+		}
+
+		orders, err := ds.GetPaginatedOrders(ctx, ports.Filter{})
+		require.ErrorIs(t, err, expectedErr)
+		require.Nil(t, orders)
+	})
+
+	t.Run("when GetPaginatedOrdersFn is not defined, it returns ErrFunctionNotImplemented", func(t *testing.T) {
+		ds := &mock.DatastoreMock{}
+
+		orders, err := ds.GetPaginatedOrders(ctx, ports.Filter{})
+		require.ErrorIs(t, err, mock.ErrFunctionNotImplemented)
+		require.Nil(t, orders)
 	})
 }

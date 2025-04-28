@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/api"
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/product"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/datastore"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/config"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain"
@@ -27,6 +28,9 @@ var (
 	ds        domain.Datastore
 	cc        usecase.CreateClientUseCase
 	gc        usecase.GetClientUseCase
+	co        usecase.CreateOrderUseCase
+	uo        usecase.UpdateOrderUseCase
+	gpo       usecase.GetPaginatedOrdersUseCase
 	ginEngine *gin.Engine
 )
 
@@ -55,10 +59,15 @@ func TestMain(m *testing.M) {
 		log.Fatalf("error when initializing fixtures: %v", err)
 	}
 
+	productClient := product.NewClient(*cfg)
+
 	ds = datastore.NewDatastore(sqlDB)
 	cc = usecase.NewCreateClientUseCase(ds)
 	gc = usecase.NewGetClientUseCase(ds)
-	ginEngine = api.GenerateRouter(cfg, ds, cc, gc)
+	co = usecase.NewCreateOrderUseCase(ds, productClient)
+	uo = usecase.NewUpdateOrderUseCase(ds)
+	gpo = usecase.NewGetPaginatedOrdersUseCase(ds)
+	ginEngine = api.GenerateRouter(cfg, ds, cc, gc, co, uo, gpo)
 
 	os.Exit(m.Run())
 }
@@ -67,4 +76,14 @@ func prepareTestDatabase() {
 	if err := fixtures.Load(); err != nil {
 		log.Fatalf("error when loading fixtures: %v", err)
 	}
+}
+
+func setupTestRouter(productServiceURL string) *gin.Engine {
+	mockCfg := *cfg
+	mockCfg.ProductServiceURL = productServiceURL
+
+	mockProductClient := product.NewClient(mockCfg)
+	mockCo := usecase.NewCreateOrderUseCase(ds, mockProductClient)
+
+	return api.GenerateRouter(&mockCfg, ds, cc, gc, mockCo, uo, gpo)
 }

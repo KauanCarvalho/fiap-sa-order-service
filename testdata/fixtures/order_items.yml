@@ -1,0 +1,53 @@
+# SKU-1 - Order 1.
+- id: 1
+  order_id: 1
+  sku: SKU-1
+  quantity: 1
+  price: 100.00
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()
+
+# SKU-1 - Order 2.
+- id: 2
+  order_id: 2
+  sku: SKU-1
+  quantity: 2
+  price: 100.00
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()
+
+# SKU-1 - Order 3.
+- id: 3
+  order_id: 3
+  sku: SKU-1
+  quantity: 1
+  price: 100.00
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()
+
+# SKU-2 - Order 3.
+- id: 4
+  order_id: 3
+  sku: SKU-2
+  quantity: 1
+  price: 50.00
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()
+
+# SKU-3 - Order 4.
+- id: 5
+  order_id: 4
+  sku: SKU-3
+  quantity: 1
+  price: 200.00
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()
+
+# SKU-4 - Order 4.
+- id: 6
+  order_id: 4
+  sku: SKU-1
+  quantity: 1
+  price: 50.00
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()
