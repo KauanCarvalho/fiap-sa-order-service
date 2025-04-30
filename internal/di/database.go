@@ -4,11 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/config"
-	"github.com/go-testfixtures/testfixtures/v3"
 
+	_ "github.com/go-sql-driver/mysql" //nolint:riveve // its mandatory.
+	"github.com/go-testfixtures/testfixtures/v3"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/source/file" //nolint:riveve // its mandatory.
 	gormMySQL "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -32,6 +38,34 @@ func NewDatabaseConnectionPool(cfg *config.Config) (*gorm.DB, error) {
 	})
 	if errOpen != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", errOpen)
+	}
+
+	if cfg.IsProduction() { //nolint:nestif // this is a special case.
+		sqlDB, err := db.DB()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get database instance: %w", err)
+		}
+
+		driver, err := mysql.WithInstance(sqlDB, &mysql.Config{})
+		if err != nil {
+			return nil, err
+		}
+
+		basePath, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+
+		migrationPath := filepath.Join(basePath, "migrations")
+
+		m, err := migrate.NewWithDatabaseInstance("file://"+migrationPath, "postgres", driver)
+		if err != nil {
+			return nil, err
+		}
+
+		if err = m.Up(); err != nil && err.Error() != "no change" {
+			return nil, fmt.Errorf("failed to run migration: %w", err)
+		}
 	}
 
 	sqlDB, errDB := db.DB()
