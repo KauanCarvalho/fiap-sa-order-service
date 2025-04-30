@@ -52,7 +52,7 @@ jobs:
         run: go mod download -x
 
       - name: Run test script
-        run: config/container/ci-cd/test.sh
+        run: config/container/test.sh
 
   lint:
     runs-on: ubuntu-latest
