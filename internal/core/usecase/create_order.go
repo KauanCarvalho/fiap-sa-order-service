@@ -2,11 +2,15 @@ package usecase
 
 import (
 	"context"
+	"strconv"
 
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/payment"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/product"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain/entities"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase/dto"
+
+	"gorm.io/gorm"
 )
 
 type CreateOrderUseCase interface {
@@ -16,12 +20,18 @@ type CreateOrderUseCase interface {
 type createOrderUseCase struct {
 	ds            domain.Datastore
 	productClient product.ClientInterface
+	paymentClient payment.ClientInterface
 }
 
-func NewCreateOrderUseCase(ds domain.Datastore, productClient product.ClientInterface) CreateOrderUseCase {
+func NewCreateOrderUseCase(
+	ds domain.Datastore,
+	productClient product.ClientInterface,
+	paymentClient payment.ClientInterface,
+) CreateOrderUseCase {
 	return &createOrderUseCase{
 		ds:            ds,
 		productClient: productClient,
+		paymentClient: paymentClient,
 	}
 }
 
@@ -31,31 +41,49 @@ func (c *createOrderUseCase) Run(ctx context.Context, input dto.OrderInputCreate
 		return nil, err
 	}
 
-	order := &entities.Order{
-		ClientID: input.ClientID,
-		Status:   "pending",
-	}
-
-	for _, item := range input.Items {
-		productResponse, errClient := c.productClient.GetProduct(ctx, item.SKU)
-		if errClient != nil {
-			return nil, errClient
+	var createdOrder *entities.Order
+	err = c.ds.GetDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		order := &entities.Order{
+			ClientID: input.ClientID,
+			Status:   "pending",
 		}
 
-		orderItem := entities.OrderItem{
-			SKU:      item.SKU,
-			Quantity: item.Quantity,
-			Price:    productResponse.Price,
+		for _, item := range input.Items {
+			productResponse, errClient := c.productClient.GetProduct(ctx, item.SKU)
+			if errClient != nil {
+				return errClient
+			}
+			orderItem := entities.OrderItem{
+				SKU:      item.SKU,
+				Quantity: item.Quantity,
+				Price:    productResponse.Price,
+			}
+			order.OrderItems = append(order.OrderItems, orderItem)
 		}
-		order.OrderItems = append(order.OrderItems, orderItem)
-	}
 
-	order.CalculateTotal()
+		order.CalculateTotal()
 
-	err = c.ds.CreateOrder(ctx, order)
+		if err = c.ds.CreateOrderTx(ctx, tx, order); err != nil {
+			return err
+		}
+
+		externalRef := strconv.FormatUint(uint64(order.ID), 10)
+		paymentResponse, errPayment := c.paymentClient.AuthorizePayment(ctx, order.Price, externalRef, "pix")
+		if errPayment != nil {
+			return errPayment
+		}
+
+		order.Payment.Status = paymentResponse.Status
+		order.Payment.QRCode = paymentResponse.QRCode
+		order.Payment.PaymentMethod = paymentResponse.PaymentMethod
+		createdOrder = order
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	return order, nil
+	return createdOrder, nil
 }

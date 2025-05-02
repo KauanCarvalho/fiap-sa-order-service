@@ -31,7 +31,7 @@ func TestOrderAdminHandler_UpdateOrderStatus(t *testing.T) {
 			},
 		}
 
-		err := ds.CreateOrder(ctx, order)
+		err := ds.CreateOrderTx(ctx, ds.GetDB(), order)
 		require.NoError(t, err)
 
 		req, _ := http.NewRequest(http.MethodPatch, "/api/v1/admin/orders/"+strconv.Itoa(int(order.ID))+"/ready", nil)

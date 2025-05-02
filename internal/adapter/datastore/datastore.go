@@ -21,3 +21,7 @@ type datastore struct {
 func NewDatastore(db *gorm.DB) domain.Datastore {
 	return &datastore{db: db}
 }
+
+func (d *datastore) GetDB() *gorm.DB {
+	return d.db
+}

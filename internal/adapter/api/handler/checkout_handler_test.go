@@ -17,14 +17,28 @@ func TestCheckoutHandler_Create(t *testing.T) {
 	prepareTestDatabase()
 
 	t.Run("successful order creation", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		productServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/v1/products/test-sku", r.URL.Path)
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"price": 49.99}`))
 		}))
-		defer server.Close()
+		defer productServer.Close()
 
-		engine := setupTestRouter(server.URL)
+		paymentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/v1/payments/authorize", r.URL.Path)
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(`{
+				"amount": 99.98,
+				"status": "",
+				"external_reference": "order-123",
+				"provider": "mockpay",
+				"payment_method": "pix",
+				"qr_code": "some-qr-code"
+			}`))
+		}))
+		defer paymentServer.Close()
+
+		engine := setupTestRouter(productServer.URL, paymentServer.URL)
 
 		reqBody := `{
 			"client_id": 1,
@@ -91,13 +105,27 @@ func TestCheckoutHandler_Create(t *testing.T) {
 	})
 
 	t.Run("product not found", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		productServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/v1/products/INVALIDSKU", r.URL.Path)
 			w.WriteHeader(http.StatusNotFound)
 		}))
-		defer server.Close()
+		defer productServer.Close()
 
-		engine := setupTestRouter(server.URL)
+		paymentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/api/v1/payments/authorize", r.URL.Path)
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(`{
+				"amount": 99.98,
+				"status": "peding",
+				"external_reference": "order-123",
+				"provider": "mockpay",
+				"payment_method": "pix",
+				"qr_code": "some-qr-code"
+			}`))
+		}))
+		defer paymentServer.Close()
+
+		engine := setupTestRouter(productServer.URL, paymentServer.URL)
 
 		input := useCaseDTO.OrderInputCreate{
 			ClientID: 1,
@@ -122,13 +150,65 @@ func TestCheckoutHandler_Create(t *testing.T) {
 	})
 
 	t.Run("product service internal server error (500)", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		productServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/v1/products/ANYSKU", r.URL.Path)
 			w.WriteHeader(http.StatusInternalServerError)
 		}))
-		defer server.Close()
+		defer productServer.Close()
 
-		engine := setupTestRouter(server.URL)
+		paymentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/v1/payments/authorize", r.URL.Path)
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(`{
+				"amount": 99.98,
+				"status": "pending",
+				"external_reference": "order-123",
+				"provider": "mockpay",
+				"payment_method": "pix",
+				"qr_code": "some-qr-code"
+			}`))
+		}))
+		defer paymentServer.Close()
+
+		engine := setupTestRouter(productServer.URL, paymentServer.URL)
+
+		input := useCaseDTO.OrderInputCreate{
+			ClientID: 1,
+			Items: []useCaseDTO.OrderItemInputCreate{
+				{
+					SKU:      "ANYSKU",
+					Quantity: 1,
+				},
+			},
+		}
+
+		body, err := json.Marshal(input)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/checkout", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		rec := httptest.NewRecorder()
+		engine.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	})
+
+	t.Run("payment service internal server error (500)", func(t *testing.T) {
+		productServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/v1/products/ANYSKU", r.URL.Path)
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"price": 49.99}`))
+		}))
+		defer productServer.Close()
+
+		paymentServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/v1/payments/authorize", r.URL.Path)
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer paymentServer.Close()
+
+		engine := setupTestRouter(productServer.URL, paymentServer.URL)
 
 		input := useCaseDTO.OrderInputCreate{
 			ClientID: 1,

@@ -27,6 +27,7 @@ jobs:
       DB_PORT: ${{ secrets.TEST_CI_DB_PORT }}
       DB_NAME: ${{ secrets.TEST_CI_DB_NAME }}
       PRODUCT_SERVICE_URL: ${{ secrets.TEST_PRODUCT_SERVICE_URL }}
+      PAYMENT_SERVICE_URL: ${{ secrets.TEST_PAYMENT_SERVICE_URL }}
 
     steps:
       - name: Checkout repository

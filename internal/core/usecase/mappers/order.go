@@ -19,5 +19,10 @@ func ToOrderDTO(order entities.Order) dto.OrderOutput {
 		CreatedAt: order.CreatedAt,
 		UpdatedAt: order.UpdatedAt,
 		Items:     orderItemDTOs,
+		Payment: dto.PaymentOutput{
+			Status:        order.Payment.Status,
+			QRCode:        order.Payment.QRCode,
+			PaymentMethod: order.Payment.PaymentMethod,
+		},
 	}
 }

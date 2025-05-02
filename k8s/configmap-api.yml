@@ -8,6 +8,7 @@ data:
   APP_TYPE: "api"
   PORT: "8080"
   PRODUCT_SERVICE_URL: "http://product-service-api/api"
+  PAYMENT_SERVICE_URL: "http://payment-service-api/api"
   DB_PORT: "3306"
   DB_MAX_OPEN_CONNS: "10"
   DB_MAX_IDLE_CONNS: "10"

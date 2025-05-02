@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/payment"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/product"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase/dto"
@@ -21,6 +22,18 @@ func (p *productClientStub) GetProduct(ctx context.Context, sku string) (*produc
 	return p.GetProductFunc(ctx, sku)
 }
 
+type paymentClientStub struct {
+	AuthorizePaymentFunc func(ctx context.Context, amount float64, externalReference, paymentMethod string) (*payment.Response, error)
+}
+
+func (p *paymentClientStub) AuthorizePayment(
+	ctx context.Context,
+	amount float64,
+	externalReference, paymentMethod string,
+) (*payment.Response, error) {
+	return p.AuthorizePaymentFunc(ctx, amount, externalReference, paymentMethod)
+}
+
 func TestCreateOrderUseCase_Run(t *testing.T) {
 	prepareTestDatabase()
 
@@ -31,7 +44,17 @@ func TestCreateOrderUseCase_Run(t *testing.T) {
 			},
 		}
 
-		uc := usecase.NewCreateOrderUseCase(ds, productClient)
+		paymentClient := &paymentClientStub{
+			AuthorizePaymentFunc: func(_ context.Context, _ float64, _ string, _ string) (*payment.Response, error) {
+				return &payment.Response{
+					Amount:            30.0,
+					Status:            "pending",
+					ExternalReference: "order-123",
+				}, nil
+			},
+		}
+
+		uc := usecase.NewCreateOrderUseCase(ds, productClient, paymentClient)
 
 		input := dto.OrderInputCreate{
 			ClientID: 1,
@@ -52,8 +75,9 @@ func TestCreateOrderUseCase_Run(t *testing.T) {
 
 	t.Run("error when client not found", func(t *testing.T) {
 		productClient := &productClientStub{}
+		paymentClient := &paymentClientStub{}
 
-		uc := usecase.NewCreateOrderUseCase(ds, productClient)
+		uc := usecase.NewCreateOrderUseCase(ds, productClient, paymentClient)
 
 		input := dto.OrderInputCreate{
 			ClientID: 9999,
@@ -75,12 +99,42 @@ func TestCreateOrderUseCase_Run(t *testing.T) {
 			},
 		}
 
-		uc := usecase.NewCreateOrderUseCase(ds, productClient)
+		paymentClient := &paymentClientStub{}
+
+		uc := usecase.NewCreateOrderUseCase(ds, productClient, paymentClient)
 
 		input := dto.OrderInputCreate{
 			ClientID: 1,
 			Items: []dto.OrderItemInputCreate{
 				{SKU: "invalid-sku", Quantity: 1},
+			},
+		}
+
+		order, err := uc.Run(ctx, input)
+
+		require.Error(t, err)
+		assert.Nil(t, order)
+	})
+
+	t.Run("error when payment client returns error", func(t *testing.T) {
+		productClient := &productClientStub{
+			GetProductFunc: func(_ context.Context, _ string) (*product.Response, error) {
+				return &product.Response{Price: 10.0}, nil
+			},
+		}
+
+		paymentClient := &paymentClientStub{
+			AuthorizePaymentFunc: func(_ context.Context, _ float64, _ string, _ string) (*payment.Response, error) {
+				return nil, errors.New("payment authorization failed")
+			},
+		}
+
+		uc := usecase.NewCreateOrderUseCase(ds, productClient, paymentClient)
+
+		input := dto.OrderInputCreate{
+			ClientID: 1,
+			Items: []dto.OrderItemInputCreate{
+				{SKU: "product-1", Quantity: 2},
 			},
 		}
 

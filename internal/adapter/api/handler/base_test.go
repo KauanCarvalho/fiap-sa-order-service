@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/api"
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/payment"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/product"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/datastore"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/config"
@@ -60,11 +61,12 @@ func TestMain(m *testing.M) {
 	}
 
 	productClient := product.NewClient(*cfg)
+	paymentClient := payment.NewClient(*cfg)
 
 	ds = datastore.NewDatastore(sqlDB)
 	cc = usecase.NewCreateClientUseCase(ds)
 	gc = usecase.NewGetClientUseCase(ds)
-	co = usecase.NewCreateOrderUseCase(ds, productClient)
+	co = usecase.NewCreateOrderUseCase(ds, productClient, paymentClient)
 	uo = usecase.NewUpdateOrderUseCase(ds)
 	gpo = usecase.NewGetPaginatedOrdersUseCase(ds)
 	ginEngine = api.GenerateRouter(cfg, ds, cc, gc, co, uo, gpo)
@@ -78,12 +80,15 @@ func prepareTestDatabase() {
 	}
 }
 
-func setupTestRouter(productServiceURL string) *gin.Engine {
+func setupTestRouter(productServiceURL, paymentServiceURL string) *gin.Engine {
 	mockCfg := *cfg
 	mockCfg.ProductServiceURL = productServiceURL
+	mockCfg.PaymentServiceURL = paymentServiceURL
 
 	mockProductClient := product.NewClient(mockCfg)
-	mockCo := usecase.NewCreateOrderUseCase(ds, mockProductClient)
+	mockPaymentClient := payment.NewClient(mockCfg)
+
+	mockCo := usecase.NewCreateOrderUseCase(ds, mockProductClient, mockPaymentClient)
 
 	return api.GenerateRouter(&mockCfg, ds, cc, gc, mockCo, uo, gpo)
 }

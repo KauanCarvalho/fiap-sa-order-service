@@ -8,6 +8,7 @@ import (
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/application/mock"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain/entities"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase/ports"
+	"gorm.io/gorm"
 
 	"github.com/stretchr/testify/require"
 )
@@ -104,24 +105,24 @@ func TestDatastoreMock_GetClientByCpf(t *testing.T) {
 	})
 }
 
-func TestDatastoreMock_CreateOrder(t *testing.T) {
-	t.Run("when CreateOrderFn is defined, it returns the custom error", func(t *testing.T) {
+func TestDatastoreMock_CreateOrderTx(t *testing.T) {
+	t.Run("when CreateOrderTxFn is defined, it returns the custom error", func(t *testing.T) {
 		expectedErr := errors.New("db unavailable")
 
 		ds := &mock.DatastoreMock{
-			CreateOrderFn: func(_ context.Context, _ *entities.Order) error {
+			CreateOrderTxFn: func(_ context.Context, _ *gorm.DB, _ *entities.Order) error {
 				return expectedErr
 			},
 		}
 
-		err := ds.CreateOrder(ctx, nil)
+		err := ds.CreateOrderTx(ctx, nil, nil)
 		require.ErrorIs(t, err, expectedErr)
 	})
 
 	t.Run("when CreateOrderFn is not defined, it returns ErrFunctionNotImplemented", func(t *testing.T) {
 		ds := &mock.DatastoreMock{}
 
-		err := ds.CreateOrder(ctx, nil)
+		err := ds.CreateOrderTx(ctx, nil, nil)
 		require.ErrorIs(t, err, mock.ErrFunctionNotImplemented)
 	})
 }
@@ -169,5 +170,27 @@ func TestDatastoreMock_GetPaginatedOrders(t *testing.T) {
 		orders, err := ds.GetPaginatedOrders(ctx, ports.Filter{})
 		require.ErrorIs(t, err, mock.ErrFunctionNotImplemented)
 		require.Nil(t, orders)
+	})
+}
+
+func TestDatastoreMock_GetDB(t *testing.T) {
+	t.Run("returns the database instance", func(t *testing.T) {
+		ds := &mock.DatastoreMock{
+			GetDBFn: func() *gorm.DB {
+				return nil
+			},
+		}
+
+		db := ds.GetDB()
+		require.Nil(t, db)
+	})
+}
+
+func TestDatastoreMock_GetDBFnNotDefined(t *testing.T) {
+	t.Run("when GetDBFn is not defined, it returns ErrFunctionNotImplemented", func(t *testing.T) {
+		ds := &mock.DatastoreMock{}
+
+		db := ds.GetDB()
+		require.Nil(t, db)
 	})
 }

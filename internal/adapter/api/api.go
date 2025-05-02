@@ -5,6 +5,7 @@ import (
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/api/handler"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/api/middleware"
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/payment"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/product"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/datastore"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/config"
@@ -39,11 +40,12 @@ func (s *Server) Run() {
 
 	// Clients.
 	productClient := product.NewClient(*s.cfg)
+	paymentClient := payment.NewClient(*s.cfg)
 
 	// usecases.
 	cc := usecase.NewCreateClientUseCase(ds)
 	gc := usecase.NewGetClientUseCase(ds)
-	co := usecase.NewCreateOrderUseCase(ds, productClient)
+	co := usecase.NewCreateOrderUseCase(ds, productClient, paymentClient)
 	uo := usecase.NewUpdateOrderUseCase(ds)
 	gpo := usecase.NewGetPaginatedOrdersUseCase(ds)
 

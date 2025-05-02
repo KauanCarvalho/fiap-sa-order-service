@@ -1,10 +1,11 @@
 FROM golang:1.24.2-alpine AS base
 
 RUN apk add --no-cache \
-  curl \
-  git \
-  tzdata \
-  bash
+    curl \
+    git \
+    tzdata \
+    bash \
+    make
 
 WORKDIR /app
 
@@ -14,10 +15,6 @@ RUN go mod download
 
 COPY . .
 
-FROM base AS dev
-
-RUN apk add --no-cache make
-
 FROM base AS build
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o order-service-api ./cmd/api/main.go
@@ -26,7 +23,7 @@ FROM alpine:latest AS release
 
 WORKDIR /app
 
-COPY --from=build /app/config/container/start-app.sh ./
+COPY --from=build /app/config/container/start-app.sh ./ 
 COPY --from=build /app/migrations /app/migrations
 COPY --from=build /app/order-service-api .
 
