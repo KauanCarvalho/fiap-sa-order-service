@@ -72,6 +72,11 @@ func TestToOrderDTO(t *testing.T) {
 			CreatedAt:  createdAt,
 			UpdatedAt:  updatedAt,
 			OrderItems: []entities.OrderItem{},
+			Payment: entities.Payment{
+				Status:        "Paid",
+				QRCode:        "some_qr_code",
+				PaymentMethod: "credit_card",
+			},
 		}
 
 		result := mappers.ToOrderDTO(order)
@@ -82,6 +87,9 @@ func TestToOrderDTO(t *testing.T) {
 		assert.InEpsilon(t, 150.00, result.Price, 0.01)
 		assert.Equal(t, createdAt, result.CreatedAt)
 		assert.Equal(t, updatedAt, result.UpdatedAt)
+		assert.Equal(t, "Paid", result.Payment.Status)
+		assert.Equal(t, "some_qr_code", result.Payment.QRCode)
+		assert.Equal(t, "credit_card", result.Payment.PaymentMethod)
 
 		assert.Empty(t, result.Items)
 	})

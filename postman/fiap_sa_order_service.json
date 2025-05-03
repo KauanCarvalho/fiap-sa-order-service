@@ -339,46 +339,6 @@
 									},
 									"response": [
 										{
-											"name": "200 - Success",
-											"originalRequest": {
-												"method": "POST",
-												"header": [],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n  \"client_id\": {{client_id}},\r\n  \"items\": [\r\n    {\r\n      \"sku\": \"{{sku}}\",\r\n      \"quantity\": 2\r\n    }\r\n  ]\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": "{{base_url}}/api/v1/checkout"
-											},
-											"status": "Created",
-											"code": 201,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "Content-Type",
-													"value": "application/json; charset=utf-8"
-												},
-												{
-													"key": "X-Request-Id",
-													"value": "fiap-sa-order-service-4ad09317-7af5-44bc-bd53-7999c2116721"
-												},
-												{
-													"key": "Date",
-													"value": "Mon, 28 Apr 2025 01:31:32 GMT"
-												},
-												{
-													"key": "Content-Length",
-													"value": "210"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"id\": 1,\n    \"client_id\": 1,\n    \"status\": \"\",\n    \"price\": 114.52,\n    \"created_at\": \"0001-01-01T00:00:00Z\",\n    \"updated_at\": \"0001-01-01T00:00:00Z\",\n    \"items\": [\n        {\n            \"sku\": \"name-2fd7a3fb-d36f-4767-80c4-eccd3c917ac4\",\n            \"quantity\": 2,\n            \"price\": 57.26\n        }\n    ]\n}"
-										},
-										{
 											"name": "400 - Failure",
 											"originalRequest": {
 												"method": "POST",
@@ -417,6 +377,46 @@
 											],
 											"cookie": [],
 											"body": "{\n    \"errors\": [\n        {\n            \"field\": \"client_id\",\n            \"message\": \"client not found\"\n        }\n    ]\n}"
+										},
+										{
+											"name": "201 - Success",
+											"originalRequest": {
+												"method": "POST",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"client_id\": {{client_id}},\r\n  \"items\": [\r\n    {\r\n      \"sku\": \"{{sku}}\",\r\n      \"quantity\": 2\r\n    }\r\n  ]\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": "{{base_url}}/api/v1/checkout"
+											},
+											"status": "Created",
+											"code": 201,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json; charset=utf-8"
+												},
+												{
+													"key": "X-Request-Id",
+													"value": "fiap-sa-order-service-e8240ea6-f2af-484a-9b2e-f9c5d44e6de8"
+												},
+												{
+													"key": "Date",
+													"value": "Sat, 03 May 2025 23:35:16 GMT"
+												},
+												{
+													"key": "Content-Length",
+													"value": "320"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"id\": 1,\n    \"client_id\": 1,\n    \"status\": \"pending\",\n    \"price\": 130.48,\n    \"created_at\": \"0001-01-01T00:00:00Z\",\n    \"updated_at\": \"0001-01-01T00:00:00Z\",\n    \"items\": [\n        {\n            \"sku\": \"name-2bdd3e10-6964-425d-896f-4caa23e17fff\",\n            \"quantity\": 2,\n            \"price\": 65.24\n        }\n    ],\n    \"payment\": {\n        \"status\": \"pending\",\n        \"qr_code\": \"97785bd7-470b-403f-9567-b52f15d33183\",\n        \"payment_method\": \"pix\"\n    }\n}"
 										}
 									]
 								}

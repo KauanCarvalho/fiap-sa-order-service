@@ -6,10 +6,12 @@ import (
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain/entities"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase/ports"
 	internalErrors "github.com/KauanCarvalho/fiap-sa-order-service/internal/shared/errors"
+
+	"gorm.io/gorm"
 )
 
-func (d *datastore) CreateOrder(ctx context.Context, order *entities.Order) error {
-	if err := d.db.WithContext(ctx).Create(order).Error; err != nil {
+func (d *datastore) CreateOrderTx(ctx context.Context, tx *gorm.DB, order *entities.Order) error {
+	if err := tx.WithContext(ctx).Create(order).Error; err != nil {
 		if isDuplicateCPFError(err) {
 			return ErrExistingRecord
 		}

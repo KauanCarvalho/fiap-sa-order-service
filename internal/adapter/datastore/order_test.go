@@ -33,7 +33,7 @@ func TestCreateOrder(t *testing.T) {
 			},
 		}
 
-		err = ds.CreateOrder(ctx, order)
+		err = ds.CreateOrderTx(ctx, ds.GetDB(), order)
 		require.NoError(t, err)
 
 		assert.NotZero(t, order.ID)
@@ -55,7 +55,7 @@ func TestCreateOrder(t *testing.T) {
 			Price:    200.00,
 		}
 
-		err := ds.CreateOrder(ctx, order)
+		err := ds.CreateOrderTx(ctx, ds.GetDB(), order)
 		require.Error(t, err)
 	})
 }
@@ -78,7 +78,7 @@ func TestUpdateOrderStatus(t *testing.T) {
 		},
 	}
 
-	err := ds.CreateOrder(ctx, order)
+	err := ds.CreateOrderTx(ctx, ds.GetDB(), order)
 	require.NoError(t, err)
 	require.NotZero(t, order.ID)
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/payment"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/clients/product"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/application/dto"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase"
@@ -58,22 +59,28 @@ func (ch *CheckoutHandler) Create(c *gin.Context) {
 
 	order, err := ch.createOrderUseCase.Run(ctx, input)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
 			c.JSON(http.StatusBadRequest, dto.SimpleAPIErrorsOutput(
 				"",
 				"client_id",
 				"client not found",
 			))
-			return
-		} else if errors.Is(err, product.ErrSKUNotFound) {
+		case errors.Is(err, product.ErrSKUNotFound):
 			c.JSON(http.StatusBadRequest, dto.SimpleAPIErrorsOutput(
 				"",
 				"items",
 				"product not found",
 			))
-			return
+		case errors.Is(err, payment.ErrProblemToAuthorizePayment):
+			c.JSON(http.StatusInternalServerError, dto.SimpleAPIErrorsOutput(
+				"",
+				"payment",
+				"problem to authorize payment",
+			))
+		default:
+			c.JSON(http.StatusInternalServerError, dto.SimpleAPIErrorsOutput("", "", "failed to create order"))
 		}
-		c.JSON(http.StatusInternalServerError, dto.SimpleAPIErrorsOutput("", "", "failed to create order"))
 		return
 	}
 

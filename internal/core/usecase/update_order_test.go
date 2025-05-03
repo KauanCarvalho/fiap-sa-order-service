@@ -29,7 +29,7 @@ func TestUpdateOrderUseCase_Run(t *testing.T) {
 			},
 		}
 
-		err := ds.CreateOrder(ctx, order)
+		err := ds.CreateOrderTx(ctx, ds.GetDB(), order)
 		require.NoError(t, err)
 
 		var createdOrder entities.Order

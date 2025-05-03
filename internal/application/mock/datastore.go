@@ -6,6 +6,7 @@ import (
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain/entities"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase/ports"
+	"gorm.io/gorm"
 )
 
 type DatastoreMock struct {
@@ -13,9 +14,10 @@ type DatastoreMock struct {
 	CreateClientFn       func(ctx context.Context, client *entities.Client) error
 	GetClientByCpfFn     func(ctx context.Context, cpf string) (*entities.Client, error)
 	GetClientByIDFn      func(ctx context.Context, id uint) (*entities.Client, error)
-	CreateOrderFn        func(ctx context.Context, order *entities.Order) error
+	CreateOrderTxFn      func(ctx context.Context, tx *gorm.DB, order *entities.Order) error
 	UpdateOrderStatusFn  func(ctx context.Context, orderID uint, status string) error
 	GetPaginatedOrdersFn func(ctx context.Context, filter ports.Filter) ([]*entities.Order, error)
+	GetDBFn              func() *gorm.DB
 }
 
 var ErrFunctionNotImplemented = errors.New("function not implemented")
@@ -52,9 +54,9 @@ func (m *DatastoreMock) GetClientByID(ctx context.Context, id uint) (*entities.C
 	return nil, ErrFunctionNotImplemented
 }
 
-func (m *DatastoreMock) CreateOrder(ctx context.Context, order *entities.Order) error {
-	if m.CreateOrderFn != nil {
-		return m.CreateOrderFn(ctx, order)
+func (m *DatastoreMock) CreateOrderTx(ctx context.Context, tx *gorm.DB, order *entities.Order) error {
+	if m.CreateOrderTxFn != nil {
+		return m.CreateOrderTxFn(ctx, tx, order)
 	}
 
 	return ErrFunctionNotImplemented
@@ -74,4 +76,12 @@ func (m *DatastoreMock) GetPaginatedOrders(ctx context.Context, filter ports.Fil
 	}
 
 	return nil, ErrFunctionNotImplemented
+}
+
+func (m *DatastoreMock) GetDB() *gorm.DB {
+	if m.GetDBFn != nil {
+		return m.GetDBFn()
+	}
+
+	return nil
 }

@@ -78,6 +78,11 @@ spec:
             configMapKeyRef:
               name: order-service-api-config
               key: PRODUCT_SERVICE_URL
+        - name: PAYMENT_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-api-config
+              key: PAYMENT_SERVICE_URL
         resources:
           requests:
             memory: "64Mi"
