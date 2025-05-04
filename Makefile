@@ -15,7 +15,7 @@ ifeq ($(DB_ENV),test)
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help deps setup-git-hooks lint check-coverage migration migrate-up migrate-down test coverage-html build-api run-api run-api-air docker-up docker-down install-tools swag
+.PHONY: help deps setup-git-hooks lint check-coverage migration migrate-up migrate-down test coverage-html build-api run-api run-api-air build-worker run-worker run-worker-air docker-up docker-down install-tools swag
 
 help:
 	@echo "Usage: make [target]"
@@ -34,6 +34,9 @@ help:
 	@echo "  build-api       Build the API"
 	@echo "  run-api         Run the API"
 	@echo "  run-api-air     Run the API with live reloading"
+	@echo "  build-worker    Build the worker"
+	@echo "  run-worker      Run the worker"
+	@echo "  run-worker-air  Run the worker with live reloading"
 	@echo "  docker-up       Start Docker container(s)"
 	@echo "  docker-down     Stop Docker containers"
 	@echo "  install-tools   Install tools with third-party dependencies"
@@ -86,6 +89,18 @@ run-api: build-api
 run-api-air: deps
 	@echo "Running api with live reloading..."
 	$(GO) tool air -c .air.api.toml
+
+build-worker:
+	@echo "Building worker..."
+	$(GO) build -o $(BIN_DIR)/$(APP_NAME)_worker ./cmd/worker/main.go
+
+run-worker: build-worker
+	@echo "Running worker..."
+	$(BIN_DIR)/$(APP_NAME)_worker
+
+run-worker-air: deps
+	@echo "Running worker with live reloading..."
+	$(GO) tool air -c .air.worker.toml
 
 docker-up:
 	@echo "Starting Docker container(s)..."

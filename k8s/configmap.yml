@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: order-service-api-config
+  name: order-service-config
 data:
-  APP_NAME: "fiap-sa-order-service"
+  APP_NAME: "fiap_sa_order_service"
   APP_ENV: "production"
-  APP_TYPE: "api"
-  PORT: "8080"
   PRODUCT_SERVICE_URL: "http://product-service-api/api"
   PAYMENT_SERVICE_URL: "http://payment-service-api/api"
   DB_PORT: "3306"
   DB_MAX_OPEN_CONNS: "10"
   DB_MAX_IDLE_CONNS: "10"
+  AWS_REGION: "us-east-1"
+  AWS_SQS_NUM_WORKERS: "5"
