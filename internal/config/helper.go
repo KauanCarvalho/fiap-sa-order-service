@@ -32,3 +32,15 @@ func getEnvAsInt(key string, fallback int) int {
 
 	return fallback
 }
+
+func getEnvAsInt64(key string, fallback int64) int64 {
+	if value, ok := os.LookupEnv(key); ok {
+		if intValue, err := strconv.ParseInt(value, 10, 64); err == nil {
+			return intValue
+		}
+
+		return fallback
+	}
+
+	return fallback
+}

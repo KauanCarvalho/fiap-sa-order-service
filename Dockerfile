@@ -18,6 +18,7 @@ COPY . .
 FROM base AS build
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o order-service-api ./cmd/api/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o order-service-worker ./cmd/api/worker.go
 
 FROM alpine:latest AS release
 
@@ -26,6 +27,7 @@ WORKDIR /app
 COPY --from=build /app/config/container/start-app.sh ./ 
 COPY --from=build /app/migrations /app/migrations
 COPY --from=build /app/order-service-api .
+COPY --from=build /app/order-service-worker .
 
 EXPOSE 8080
 

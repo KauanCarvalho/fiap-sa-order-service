@@ -1,0 +1,222 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service-api
+  template:
+    metadata:
+      labels:
+        app: order-service-api
+    spec:
+      containers:
+      - name: order-service-api
+        image: kauancarvalhocalasans/restaurant-food-golang-api-fiap-app:0.1.4
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: DB_PASSWORD
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: DB_NAME
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: DB_HOST
+        - name: APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: APP_NAME
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: APP_ENV
+        - name: APP_TYPE
+          value: api
+        - name: PORT
+          value: 8080
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: DB_PORT
+        - name: DB_MAX_OPEN_CONNS
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: DB_MAX_OPEN_CONNS
+        - name: DB_MAX_IDLE_CONNS
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: DB_MAX_IDLE_CONNS
+        - name: PRODUCT_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: PRODUCT_SERVICE_URL
+        - name: PAYMENT_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: PAYMENT_SERVICE_URL
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service-worker
+  template:
+    metadata:
+      labels:
+        app: order-service-worker
+    spec:
+      containers:
+      - name: order-service-worker
+        image: kauancarvalhocalasans/restaurant-food-golang-worker-fiap-app:0.1.4
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: DB_PASSWORD
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: DB_NAME
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: DB_HOST
+        - name: AWS_ACCESS_KEY_ID 
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: order-service-secrets
+              key: AWS_SECRET_ACCESS_KEY
+        - name: APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: APP_NAME
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: APP_ENV
+        - name: APP_TYPE
+          value: worker
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: DB_PORT
+        - name: DB_MAX_OPEN_CONNS
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: DB_MAX_OPEN_CONNS
+        - name: DB_MAX_IDLE_CONNS
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: DB_MAX_IDLE_CONNS
+        - name: PRODUCT_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: PRODUCT_SERVICE_URL
+        - name: PAYMENT_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: PAYMENT_SERVICE_URL
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: order-service-config
+              key: AWS_REGION
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pgrep -f '/app/order-service-worker' > /dev/null 2>&1 && exit 0 || exit 1"
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            timeoutSeconds: 20
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - "pgrep -f '/app/order-service-worker' > /dev/null 2>&1 && exit 0 || exit 1"
+          initialDelaySeconds: 20
+          periodSeconds: 60
+          timeoutSeconds: 20
+          successThreshold: 2
+          failureThreshold: 5

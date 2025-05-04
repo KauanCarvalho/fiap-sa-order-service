@@ -55,13 +55,15 @@ jobs:
       - name: Update deployment image
         run: |
           # Replace the image in the deployment file with the new one
-          sed -i 's|image: .*|image: ${{ steps.build-image.outputs.image }}|' k8s/deployment-api.yml
+           sed -i '/name: order-service-api/{n;s|image: .*|image: ${{ steps.build-image-api.outputs.image }}|}' k8s/deployments.yml
+           sed -i '/name: order-service-worker/{n;s|image: .*|image: ${{ steps.build-image-worker.outputs.image }}|}' k8s/deployments.yml
 
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f k8s/configmap-api.yml
-          kubectl apply -f k8s/secrets-api.yml
-          kubectl apply -f k8s/deployment-api.yml
+          kubectl apply -f k8s/configmap.yml
+          kubectl apply -f k8s/secrets.yml
+          kubectl apply -f k8s/deployments.yml
           kubectl apply -f k8s/service-api.yml
           kubectl apply -f k8s/hpa-api.yml
-          kubectl rollout status deployment/order-service-api
+          kubectl rollout status deployment/order-service-api --timeout=140s
+          kubectl rollout status deployment/order-service-worker --timeout=140s

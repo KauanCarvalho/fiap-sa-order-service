@@ -34,7 +34,7 @@ func Load() *Config {
 	}
 
 	config := &Config{
-		AppName:              getEnv("APP_NAME", "fiap-sa-order-service"),
+		AppName:              getEnv("APP_NAME", "fiap_sa_order_service"),
 		AppEnv:               environment,
 		DatabaseUser:         fetchEnv("DB_USER"),
 		DatabasePassword:     getEnv("DB_PASSWORD", ""),
@@ -51,10 +51,10 @@ func Load() *Config {
 	return config
 }
 
-func (cfg Config) IsDevelopment() bool {
+func (cfg *Config) IsDevelopment() bool {
 	return cfg.AppEnv == "development"
 }
 
-func (cfg Config) IsProduction() bool {
+func (cfg *Config) IsProduction() bool {
 	return cfg.AppEnv == "production"
 }
