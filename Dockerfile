@@ -18,7 +18,7 @@ COPY . .
 FROM base AS build
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o order-service-api ./cmd/api/main.go
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o order-service-worker ./cmd/api/worker.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o order-service-worker ./cmd/worker/main.go
 
 FROM alpine:latest AS release
 
@@ -32,3 +32,11 @@ COPY --from=build /app/order-service-worker .
 EXPOSE 8080
 
 CMD ["/app/start-app.sh"]
+
+FROM base AS migrate
+
+RUN apk add --update --no-cache netcat-openbsd
+
+RUN go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+CMD ["/app/config/container/migrate.sh", "up"]

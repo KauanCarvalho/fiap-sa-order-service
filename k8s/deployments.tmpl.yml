@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: order-service-api
-        image: kauancarvalhocalasans/restaurant-food-golang-api-fiap-app:0.1.4
+        image: "${IMAGE_URI}"
         ports:
         - containerPort: 8080
         env:
@@ -51,7 +51,7 @@ spec:
         - name: APP_TYPE
           value: api
         - name: PORT
-          value: 8080
+          value: "8080"
         - name: DB_PORT
           valueFrom:
             configMapKeyRef:
@@ -79,11 +79,11 @@ spec:
               key: PAYMENT_SERVICE_URL
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "100m"
+            memory: 64Mi
+            cpu: 100m
           limits:
-            memory: "128Mi"
-            cpu: "200m"
+            memory: 128Mi
+            cpu: 200m
         livenessProbe:
           httpGet:
             path: /healthcheck
@@ -117,10 +117,12 @@ spec:
     spec:
       containers:
       - name: order-service-worker
-        image: kauancarvalhocalasans/restaurant-food-golang-worker-fiap-app:0.1.4
+        image: "${IMAGE_URI}"
         ports:
         - containerPort: 8080
         env:
+        - name: AWS_REGION
+          value: us-east-1
         - name: DB_USER
           valueFrom:
             secretKeyRef:
@@ -188,18 +190,18 @@ spec:
             configMapKeyRef:
               name: order-service-config
               key: PAYMENT_SERVICE_URL
-        - name: AWS_REGION
+        - name: AWS_SESSION_TOKEN
           valueFrom:
-            configMapKeyRef:
-              name: order-service-config
-              key: AWS_REGION
+            secretKeyRef:
+              name: order-service-secrets
+              key: AWS_SESSION_TOKEN
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "100m"
+            memory: 64Mi
+            cpu: 100m
           limits:
-            memory: "128Mi"
-            cpu: "200m"
+            memory: 128Mi
+            cpu: 200m
         livenessProbe:
             exec:
               command:
