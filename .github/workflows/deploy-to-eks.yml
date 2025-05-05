@@ -3,21 +3,29 @@ name: Deploy to EKS
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
-  CLUSTER_NAME: fiap-sa
-  ECR_REPOSITORY: fastfood-api
-  IMAGE_TAG: ${{ github.sha }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  CLUSTER_NAME: ${{ vars.CLUSTER_NAME }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
 
 jobs:
   deploy:
-    name: Deploy to EKS
+    name: Build & Push image to ECR & Deploy to EKS
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Generate image tag (app + timestamp + commit)
+        id: metadata
+        run: |
+          APP_NAME="fiap_sa_order_service"
+          TIMESTAMP="$(date +'%Y%m%d-%H%M%S')"
+          COMMIT="${GITHUB_SHA::7}"
+          echo "TAG=${APP_NAME}-${TIMESTAMP}-${COMMIT}" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -27,43 +35,82 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Create ECR repository if it doesn't exist
-        run: |
-          aws ecr describe-repositories --repository-names $ECR_REPOSITORY || aws ecr create-repository --repository-name $ECR_REPOSITORY
-
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      - name: Build and push image (APP)
         run: |
-          docker build --target release -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.TAG }}"
+          docker build --target release -t $IMAGE_URI .
+          docker push $IMAGE_URI
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+      - name: Build and push image (MIGRATE)
+        run: |
+          IMAGE_MIGRATE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.TAG }}_migrate"
+          docker build --target migrate -t $IMAGE_MIGRATE_URI .
+          docker push $IMAGE_MIGRATE_URI
+          echo "IMAGE_MIGRATE_URI=$IMAGE_MIGRATE_URI" >> $GITHUB_ENV
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
-        with:
-          version: "latest"
 
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
 
-      - name: Update deployment image
+      - name: Replace envs in Kubernetes manifests
+        env:
+          IMAGE_URI: ${{ env.IMAGE_URI }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
         run: |
-          # Replace the image in the deployment file with the new one
-           sed -i '/name: order-service-api/{n;s|image: .*|image: ${{ steps.build-image-api.outputs.image }}|}' k8s/deployments.yml
-           sed -i '/name: order-service-worker/{n;s|image: .*|image: ${{ steps.build-image-worker.outputs.image }}|}' k8s/deployments.yml
+          export DB_NAME_B64=$(echo -n "$DB_NAME" | base64 | tr -d '\n')
+          export DB_USER_B64=$(echo -n "$DB_USER" | base64 | tr -d '\n')
+          export DB_PASSWORD_B64=$(echo -n "$DB_PASSWORD" | base64 | tr -d '\n')
+          export DB_HOST_B64=$(echo -n "$DB_HOST" | base64 | tr -d '\n')
+          export AWS_ACCESS_KEY_ID_B64=$(echo -n "$AWS_ACCESS_KEY_ID" | base64 | tr -d '\n')
+          export AWS_SECRET_ACCESS_KEY_B64=$(echo -n "$AWS_SECRET_ACCESS_KEY" | base64 | tr -d '\n')
+          export AWS_SESSION_TOKEN_B64=$(echo -n "$AWS_SESSION_TOKEN" | base64 | tr -d '\n')
+          envsubst < k8s/secrets.tmpl.yml > k8s/secrets.yml
+          envsubst < k8s/deployments.tmpl.yml > k8s/deployments.yml
+
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl apply --dry-run=client -f k8s/config-map.yml
+          kubectl apply --dry-run=client -f k8s/secrets.yml
+          kubectl apply --dry-run=client -f k8s/deployments.yml
+          kubectl apply --dry-run=client -f k8s/services.yml
+          kubectl apply --dry-run=client -f k8s/hpa-api.yml
+
+      - name: Run Migrations
+        env:
+          IMAGE_MIGRATE_URI: ${{ env.IMAGE_MIGRATE_URI }}
+        run: |
+          MIGRATE_JOB_NAME="migrate-${{ github.run_id }}"
+          kubectl run "$MIGRATE_JOB_NAME" \
+            --image="${IMAGE_MIGRATE_URI}" \
+            --restart=Never \
+            --rm -i --tty \
+            --env="DB_USER=${{ secrets.DB_USER }}" \
+            --env="DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            --env="DB_NAME=${{ secrets.DB_NAME }}" \
+            --env="DB_HOST=${{ secrets.DB_HOST }}"
 
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f k8s/configmap.yml
+          kubectl apply -f k8s/config-map.yml
           kubectl apply -f k8s/secrets.yml
           kubectl apply -f k8s/deployments.yml
-          kubectl apply -f k8s/service-api.yml
+          kubectl apply -f k8s/services.yml
           kubectl apply -f k8s/hpa-api.yml
+
+      - name: Wait for deployment rollout
+        run: |
           kubectl rollout status deployment/order-service-api --timeout=140s
           kubectl rollout status deployment/order-service-worker --timeout=140s
+

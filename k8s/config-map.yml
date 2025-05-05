@@ -10,5 +10,3 @@ data:
   DB_PORT: "3306"
   DB_MAX_OPEN_CONNS: "10"
   DB_MAX_IDLE_CONNS: "10"
-  AWS_REGION: "us-east-1"
-  AWS_SQS_NUM_WORKERS: "5"

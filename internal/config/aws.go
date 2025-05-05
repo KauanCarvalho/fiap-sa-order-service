@@ -21,10 +21,11 @@ type SQSConfig struct {
 }
 
 type AWSConfig struct {
-	AccessKey string
-	SecretKey string
-	Region    string
-	SQSConfig SQSConfig
+	AccessKey    string
+	SecretKey    string
+	SessionToken string
+	Region       string
+	SQSConfig    SQSConfig
 }
 
 const defaultSQSWaitTime = int64(5)
@@ -32,9 +33,10 @@ const defaultSQSNumWorkers = 5
 
 func LoadAWSConfig(projectCfg *Config) *AWSConfig {
 	return &AWSConfig{
-		AccessKey: fetchEnv("AWS_ACCESS_KEY_ID"),
-		SecretKey: fetchEnv("AWS_SECRET_ACCESS_KEY"),
-		Region:    getEnv("AWS_REGION", "us-east-1"),
+		AccessKey:    fetchEnv("AWS_ACCESS_KEY_ID"),
+		SecretKey:    fetchEnv("AWS_SECRET_ACCESS_KEY"),
+		Region:       getEnv("AWS_REGION", "us-east-1"),
+		SessionToken: fetchEnv("AWS_SESSION_TOKEN"),
 		SQSConfig: SQSConfig{
 			WaitTime:   getEnvAsInt64("AWS_SQS_WAIT_TIME", defaultSQSWaitTime),
 			BaseURL:    getEnv("AWS_BASE_URL", ""),
