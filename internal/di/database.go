@@ -27,7 +27,7 @@ const (
 
 func NewDatabaseConnectionPool(cfg *config.Config) (*gorm.DB, error) {
 	var logMode logger.LogLevel
-	if cfg.IsProduction() {
+	if cfg.IsProduction() || cfg.IsTest() {
 		logMode = logger.Silent
 	} else {
 		logMode = logger.Info
