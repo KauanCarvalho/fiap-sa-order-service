@@ -1,7 +1,8 @@
 coverage:
   ignore:
-    - "internal/adapter/api.go"     # Ignore this specific file.
-    - "internal/config/**"          # Ignore everything under internal/config.
-    - "internal/di/**"              # Ignore everything under internal/di.
-    - "swagger/**"                  # Ignore everything under swagger.
-    - "cmd/**"                      # Ignore everything under cmd.
+    - "internal/adapter/api/api.go"     # Ignore this specific file.
+    - "internal/adapter/worker/base.go" # Ignore this specific file.
+    - "internal/config/**"              # Ignore everything under internal/config.
+    - "internal/di/**"                  # Ignore everything under internal/di.
+    - "swagger/**"                      # Ignore everything under swagger.
+    - "cmd/**"                          # Ignore everything under cmd.
