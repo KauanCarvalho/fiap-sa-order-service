@@ -114,3 +114,8 @@ jobs:
           kubectl rollout status deployment/order-service-api --timeout=140s
           kubectl rollout status deployment/order-service-worker --timeout=140s
 
+      - name: Debug rollout failure (if needed)
+        if: failure()
+        run: |
+          echo "=== Recent events ==="
+          kubectl get events --sort-by='.lastTimestamp' | tail -n 20 || true
