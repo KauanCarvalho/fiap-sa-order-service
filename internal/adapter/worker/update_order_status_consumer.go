@@ -3,8 +3,10 @@ package worker
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 
+	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/datastore"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/application/dto"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/usecase"
 	"go.uber.org/zap"
@@ -58,6 +60,14 @@ func (consumer UpdateOrderStatusConnsumer) Process(_ context.Context, processing
 
 	err = consumer.updateOrderUseCase.Run(ctx, uint(uint64ID), parsedBody.Status)
 	if err != nil {
+		if errors.Is(err, datastore.ErrOrderNotFound) {
+			zap.L().Error(
+				"order not found",
+				zap.String("queueName", processingMessage.QueueName),
+				zap.Uint64("externalReference", uint64ID),
+			)
+			return nil
+		}
 		zap.L().Error(
 			"error updating order status",
 			zap.String("queueName", processingMessage.QueueName),

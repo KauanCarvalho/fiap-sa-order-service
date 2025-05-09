@@ -48,6 +48,33 @@ func TestUpdateOrderStatusConnsumer_Process(t *testing.T) {
 		require.Equal(t, "confirmed", reloadedOrder.Status)
 	})
 
+	t.Run("when order does not exist", func(t *testing.T) {
+		prepareTestDatabase()
+
+		orderPayload := map[string]string{
+			"external_reference": "1111111",
+			"status":             "confirmed",
+		}
+		payloadBytes, _ := json.Marshal(orderPayload)
+
+		snsEnvelope := map[string]string{
+			"Type":    "Notification",
+			"Message": string(payloadBytes),
+		}
+		envelopeBytes, _ := json.Marshal(snsEnvelope)
+
+		body := string(envelopeBytes)
+		msg := &sqs.Message{Body: &body}
+
+		processingMessage := worker.ProcessingMessage{
+			Message:   msg,
+			QueueName: "test-queue",
+		}
+
+		err := uc.Process(ctx, processingMessage)
+		require.NoError(t, err)
+	})
+
 	t.Run("should fail when SNS envelope is invalid JSON", func(t *testing.T) {
 		body := "{ invalid json }"
 		msg := &sqs.Message{Body: &body}
