@@ -4,7 +4,6 @@ APP_NAME := fiap_sa_order_service
 BDD_TEST_DIR=internal/test/bdd
 BIN_DIR := bin
 DATABASE_URL := "mysql://$(DB_USER):$(DB_PASSWORD)@tcp($(DB_HOST):$(DB_PORT))/$(DB_NAME)?charset=utf8mb4&parseTime=true"
-DOCKER_COMPOSE := docker-compose
 ENV_FILE := .env
 GO ?= go
 GOBIN := $(shell ./resolve-gobin.sh)
@@ -16,33 +15,32 @@ ifeq ($(DB_ENV),test)
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help deps setup-git-hooks lint check-coverage migration migrate-up migrate-down test test-bdd coverage-html build-api run-api run-api-air build-worker run-worker run-worker-air docker-up docker-down install-tools swag
+.PHONY: help deps setup-git-hooks lint check-coverage migration migrate-up migrate-down test test-bdd test-order-service coverage-html build-api run-api run-api-air build-worker run-worker run-worker-air install-tools swag
 
 help:
-	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Available targets:"
-	@echo "  help            Show this help message"
-	@echo "  deps            Install dependencies"
-	@echo "  setup-git-hooks Install Git hooks using Lefthook"
-	@echo "  lint            Run linters"
-	@echo "  check-coverage  Check test coverage"
-	@echo "  migration       Create a new database migration files"
-	@echo "  migrate-up      Apply database migrations"
-	@echo "  migrate-down    Revert one database migration"
-	@echo "  test            Run tests"
-	@echo "  test-bdd        Run BDD tests"
-	@echo "  coverage-html   Generate HTML coverage report"
-	@echo "  build-api       Build the API"
-	@echo "  run-api         Run the API"
-	@echo "  run-api-air     Run the API with live reloading"
-	@echo "  build-worker    Build the worker"
-	@echo "  run-worker      Run the worker"
-	@echo "  run-worker-air  Run the worker with live reloading"
-	@echo "  docker-up       Start Docker container(s)"
-	@echo "  docker-down     Stop Docker containers"
-	@echo "  install-tools   Install tools with third-party dependencies"
-	@echo "  swag            Generate Swagger documentation"
+	@echo "  help                # Show this help message"
+	@echo "  deps                # Install dependencies"
+	@echo "  setup-git-hooks     # Install Git hooks using Lefthook"
+	@echo "  lint                # Run linters"
+	@echo "  check-coverage      # Check test coverage"
+	@echo "  migration           # Create a new database migration files"
+	@echo "  migrate-up          # Apply database migrations"
+	@echo "  migrate-down        # Revert one database migration"
+	@echo "  test                # Run tests"
+	@echo "  test-bdd            # Run BDD tests"
+	@echo "  test-order-service  # Run tests for order service"
+	@echo "  coverage-html       # Generate HTML coverage report"
+	@echo "  build-api           # Build the API"
+	@echo "  run-api             # Run the API"
+	@echo "  run-api-air         # Run the API with live reloading"
+	@echo "  build-worker        # Build the worker"
+	@echo "  run-worker          # Run the worker"
+	@echo "  run-worker-air      # Run the worker with live reloading"
+	@echo "  install-tools       # Install tools with third-party dependencies"
+	@echo "  swag                # Generate Swagger documentation"
+	@echo ""
 
 deps:
 	@echo "Installing dependencies..."
@@ -63,6 +61,10 @@ test:
 test-bdd:
 	@echo "Running BDD tests..."
 	DB_NAME=$(DB_NAME)_test APP_ENV=test $(GO) tool godotenv -f $(ENV_FILE) $(GO) test -v ./$(BDD_TEST_DIR) --tags=integration --coverprofile=coverage.out --cover -p 1
+
+test-order-service:
+	@echo "Running tests for order service..."
+	@./testdata/test-order-service.sh $(filter-out $@,$(MAKECMDGOALS))
 
 check-coverage: test
 	@echo "Checking coverage..."
@@ -107,14 +109,6 @@ run-worker: build-worker
 run-worker-air: deps
 	@echo "Running worker with live reloading..."
 	$(GO) tool air -c .air.worker.toml
-
-docker-up:
-	@echo "Starting Docker container(s)..."
-	$(DOCKER_COMPOSE) up -d $(filter-out $@,$(MAKECMDGOALS))
-
-docker-down:
-	@echo "Stopping Docker containers..."
-	$(DOCKER_COMPOSE) down
 
 install-tools:
 	@echo "Installing tools..."
