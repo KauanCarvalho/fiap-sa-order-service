@@ -18,6 +18,12 @@ spec:
         ports:
         - containerPort: 8080
         env:
+        - name: APP_TYPE
+          value: "api"
+        - name: PORT
+          value: "8080"
+        - name: GIN_MODE
+          value: "release"
         - name: DB_USER
           valueFrom:
             secretKeyRef:
@@ -48,10 +54,6 @@ spec:
             configMapKeyRef:
               name: order-service-config
               key: APP_ENV
-        - name: APP_TYPE
-          value: api
-        - name: PORT
-          value: "8080"
         - name: DB_PORT
           valueFrom:
             configMapKeyRef:
