@@ -3,6 +3,11 @@
 # Check for required tools
 command -v uuidgen >/dev/null 2>&1 || { echo >&2 "uuidgen is required but not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but not installed. Aborting."; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but not installed. Aborting."; exit 1; }
+command -v sed >/dev/null 2>&1 || { echo >&2 "sed is required but not installed. Aborting."; exit 1; }
+command -v tr >/dev/null 2>&1 || { echo >&2 "tr is required but not installed. Aborting."; exit 1; }
+command -v head >/dev/null 2>&1 || { echo >&2 "head is required but not installed. Aborting."; exit 1; }
+command -v tail >/dev/null 2>&1 || { echo >&2 "tail is required but not installed. Aborting."; exit 1; }
 
 base_url=$1
 shift
@@ -100,6 +105,19 @@ for i in {1..2}; do
   print_pretty_body "$body"
   echo "---------------------------------------------"
 done
+
+# Check if the first clients was created successfully
+first_cpf="${cpfs[0]}"
+echo "GET /api/v1/clients/$first_cpf"
+response=$(curl -s -w "\n%{http_code}" "$base_url/api/v1/clients/$first_cpf")
+body=$(echo "$response" | sed '$d')
+status_code=$(echo "$response" | tail -n1)
+
+echo -n "Status: "
+print_status_code "$status_code"
+echo "Response body:"
+print_pretty_body "$body"
+echo "---------------------------------------------"
 
 # Create 5 orders for each client
 for client_id in "${clients[@]}"; do
