@@ -12,7 +12,7 @@ import (
 
 func (d *datastore) CreateOrderTx(ctx context.Context, tx *gorm.DB, order *entities.Order) error {
 	if err := tx.WithContext(ctx).Create(order).Error; err != nil {
-		if isDuplicateCPFError(err) {
+		if isDuplicateErr(err) {
 			return ErrExistingRecord
 		}
 		return internalErrors.NewInternalError("failed to create order", err)

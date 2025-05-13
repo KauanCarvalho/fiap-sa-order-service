@@ -73,6 +73,45 @@ func TestCreateOrderUseCase_Run(t *testing.T) {
 		assert.InEpsilon(t, 30.0, order.Price, 0.01)
 	})
 
+	t.Run("successfully creates an order with congitoID", func(t *testing.T) {
+		productClient := &productClientStub{
+			GetProductFunc: func(_ context.Context, _ string) (*product.Response, error) {
+				return &product.Response{Price: 10.0}, nil
+			},
+		}
+
+		paymentClient := &paymentClientStub{
+			AuthorizePaymentFunc: func(_ context.Context, _ float64, _ string, _ string) (*payment.Response, error) {
+				return &payment.Response{
+					Amount:            30.0,
+					Status:            "pending",
+					ExternalReference: "order-123",
+				}, nil
+			},
+		}
+
+		uc := usecase.NewCreateOrderUseCase(ds, productClient, paymentClient)
+
+		client, err := ds.GetClientByID(ctx, 1)
+		require.NoError(t, err)
+
+		input := dto.OrderInputCreate{
+			CognitoID: client.CognitoID.String,
+			Items: []dto.OrderItemInputCreate{
+				{SKU: "product-1", Quantity: 2},
+				{SKU: "product-2", Quantity: 1},
+			},
+		}
+
+		order, err := uc.Run(ctx, input)
+
+		require.NoError(t, err)
+		require.NotNil(t, order)
+		assert.Equal(t, client.ID, order.ClientID)
+		assert.Len(t, order.OrderItems, 2)
+		assert.InEpsilon(t, 30.0, order.Price, 0.01)
+	})
+
 	t.Run("error when client not found", func(t *testing.T) {
 		productClient := &productClientStub{}
 		paymentClient := &paymentClientStub{}
@@ -81,6 +120,24 @@ func TestCreateOrderUseCase_Run(t *testing.T) {
 
 		input := dto.OrderInputCreate{
 			ClientID: 9999,
+			Items: []dto.OrderItemInputCreate{
+				{SKU: "product-1", Quantity: 1},
+			},
+		}
+
+		order, err := uc.Run(ctx, input)
+
+		require.Error(t, err)
+		assert.Nil(t, order)
+	})
+
+	t.Run("error when clientID and CognitoID are not present", func(t *testing.T) {
+		productClient := &productClientStub{}
+		paymentClient := &paymentClientStub{}
+
+		uc := usecase.NewCreateOrderUseCase(ds, productClient, paymentClient)
+
+		input := dto.OrderInputCreate{
 			Items: []dto.OrderItemInputCreate{
 				{SKU: "product-1", Quantity: 1},
 			},

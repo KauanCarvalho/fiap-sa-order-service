@@ -4,6 +4,7 @@
   cpf: "20681201002"
   created_at: RAW=NOW()
   updated_at: RAW=NOW()
+  cognito_id: RAW=UUID()
 
 # Bar.
 - id: 2
@@ -11,3 +12,4 @@
   cpf: "07644959092"
   created_at: RAW=NOW()
   updated_at: RAW=NOW()
+  cognito_id: null

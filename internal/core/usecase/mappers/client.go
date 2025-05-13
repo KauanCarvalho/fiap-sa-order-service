@@ -10,6 +10,7 @@ func ToClientDTO(client entities.Client) dto.ClientOutput {
 		ID:        client.ID,
 		Name:      client.Name,
 		CPF:       client.CPF,
+		CognitoID: dto.NullString{NullString: client.CognitoID},
 		CreatedAt: client.CreatedAt,
 		UpdatedAt: client.UpdatedAt,
 	}

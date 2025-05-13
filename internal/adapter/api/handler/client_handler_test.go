@@ -31,6 +31,26 @@ func TestClientHandler_Create(t *testing.T) {
 		assert.Contains(t, w.Body.String(), `"cpf":"12345678909"`)
 	})
 
+	t.Run("success with cognitoID", func(t *testing.T) {
+		body := map[string]string{
+			"name":       "John Doe",
+			"cpf":        "12345678910",
+			"cognito_id": "cognito-id-123",
+		}
+		bodyJSON, _ := json.Marshal(body)
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/v1/clients", bytes.NewReader(bodyJSON))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		ginEngine.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+		assert.Contains(t, w.Body.String(), `"name":"John Doe"`)
+		assert.Contains(t, w.Body.String(), `"cpf":"12345678910"`)
+		assert.Contains(t, w.Body.String(), `"cognito_id":"cognito-id-123"`)
+	})
+
 	t.Run("invalid body", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodPost, "/api/v1/clients", bytes.NewReader([]byte(`invalid json`)))
 		req.Header.Set("Content-Type", "application/json")

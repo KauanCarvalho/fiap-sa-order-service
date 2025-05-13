@@ -10,14 +10,15 @@ import (
 )
 
 type DatastoreMock struct {
-	PingFn               func(ctx context.Context) error
-	CreateClientFn       func(ctx context.Context, client *entities.Client) error
-	GetClientByCpfFn     func(ctx context.Context, cpf string) (*entities.Client, error)
-	GetClientByIDFn      func(ctx context.Context, id uint) (*entities.Client, error)
-	CreateOrderTxFn      func(ctx context.Context, tx *gorm.DB, order *entities.Order) error
-	UpdateOrderStatusFn  func(ctx context.Context, orderID uint, status string) error
-	GetPaginatedOrdersFn func(ctx context.Context, filter ports.Filter) ([]*entities.Order, error)
-	GetDBFn              func() *gorm.DB
+	PingFn                 func(ctx context.Context) error
+	CreateClientFn         func(ctx context.Context, client *entities.Client) error
+	GetClientByCpfFn       func(ctx context.Context, cpf string) (*entities.Client, error)
+	GetClientByIDFn        func(ctx context.Context, id uint) (*entities.Client, error)
+	GetClientByCognitoIDFn func(ctx context.Context, cognitoID string) (*entities.Client, error)
+	CreateOrderTxFn        func(ctx context.Context, tx *gorm.DB, order *entities.Order) error
+	UpdateOrderStatusFn    func(ctx context.Context, orderID uint, status string) error
+	GetPaginatedOrdersFn   func(ctx context.Context, filter ports.Filter) ([]*entities.Order, error)
+	GetDBFn                func() *gorm.DB
 }
 
 var ErrFunctionNotImplemented = errors.New("function not implemented")
@@ -49,6 +50,14 @@ func (m *DatastoreMock) GetClientByCpf(ctx context.Context, cpf string) (*entiti
 func (m *DatastoreMock) GetClientByID(ctx context.Context, id uint) (*entities.Client, error) {
 	if m.GetClientByIDFn != nil {
 		return m.GetClientByIDFn(ctx, id)
+	}
+
+	return nil, ErrFunctionNotImplemented
+}
+
+func (m *DatastoreMock) GetClientByCognitoID(ctx context.Context, cognitoID string) (*entities.Client, error) {
+	if m.GetClientByCognitoIDFn != nil {
+		return m.GetClientByCognitoIDFn(ctx, cognitoID)
 	}
 
 	return nil, ErrFunctionNotImplemented

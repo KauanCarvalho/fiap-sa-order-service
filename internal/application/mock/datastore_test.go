@@ -81,6 +81,30 @@ func TestDatastoreMock_GetClientById(t *testing.T) {
 	})
 }
 
+func TestDatastoreMock_GetClientByCognitoId(t *testing.T) {
+	t.Run("when GetClientByCognitoIDFn is defined, it returns the custom error", func(t *testing.T) {
+		expectedErr := errors.New("db unavailable")
+
+		ds := &mock.DatastoreMock{
+			GetClientByCognitoIDFn: func(_ context.Context, _ string) (*entities.Client, error) {
+				return nil, expectedErr
+			},
+		}
+
+		client, err := ds.GetClientByCognitoID(ctx, "")
+		require.ErrorIs(t, err, expectedErr)
+		require.Nil(t, client)
+	})
+
+	t.Run("when GetClientByCognitoIDFn is not defined, it returns ErrFunctionNotImplemented", func(t *testing.T) {
+		ds := &mock.DatastoreMock{}
+
+		client, err := ds.GetClientByCognitoID(ctx, "")
+		require.ErrorIs(t, err, mock.ErrFunctionNotImplemented)
+		require.Nil(t, client)
+	})
+}
+
 func TestDatastoreMock_GetClientByCpf(t *testing.T) {
 	t.Run("when GetClientByCpfFn is defined, it returns the custom error", func(t *testing.T) {
 		expectedErr := errors.New("db unavailable")

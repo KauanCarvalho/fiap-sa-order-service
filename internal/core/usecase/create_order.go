@@ -36,15 +36,27 @@ func NewCreateOrderUseCase(
 }
 
 func (c *createOrderUseCase) Run(ctx context.Context, input dto.OrderInputCreate) (*entities.Order, error) {
-	_, err := c.ds.GetClientByID(ctx, input.ClientID)
-	if err != nil {
-		return nil, err
+	var client *entities.Client
+	var err error
+	switch {
+	case input.ClientID > 0:
+		client, err = c.ds.GetClientByID(ctx, input.ClientID)
+		if err != nil {
+			return nil, err
+		}
+	case input.CognitoID != "":
+		client, err = c.ds.GetClientByCognitoID(ctx, input.CognitoID)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, gorm.ErrRecordNotFound
 	}
 
 	var createdOrder *entities.Order
 	err = c.ds.GetDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		order := &entities.Order{
-			ClientID: input.ClientID,
+			ClientID: client.ID,
 			Status:   "pending",
 		}
 

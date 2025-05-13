@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/datastore"
@@ -33,9 +34,23 @@ func (c *createClientUseCase) Run(ctx context.Context, input dto.ClientInputCrea
 		return nil, datastore.ErrExistingRecord
 	}
 
+	var cognitoID sql.NullString
+	if input.CognitoID != "" {
+		cognitoID = sql.NullString{
+			String: input.CognitoID,
+			Valid:  true,
+		}
+	} else {
+		cognitoID = sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+
 	client := &entities.Client{
-		Name: input.Name,
-		CPF:  input.CPF,
+		Name:      input.Name,
+		CPF:       input.CPF,
+		CognitoID: cognitoID,
 	}
 
 	err = c.ds.CreateClient(ctx, client)

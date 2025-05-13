@@ -81,6 +81,23 @@ func TestCheckoutHandler_Create(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
+	t.Run("empty cognito_id and client_id", func(t *testing.T) {
+		input := useCaseDTO.OrderInputCreate{
+			Items: []useCaseDTO.OrderItemInputCreate{},
+		}
+
+		body, err := json.Marshal(input)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/checkout", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		rec := httptest.NewRecorder()
+		ginEngine.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
 	t.Run("client not found", func(t *testing.T) {
 		input := useCaseDTO.OrderInputCreate{
 			ClientID: 99999,

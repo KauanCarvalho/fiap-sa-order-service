@@ -24,21 +24,6 @@ func TestValidateOrderCreate(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("missing client_id", func(t *testing.T) {
-		input := dto.OrderInputCreate{
-			ClientID: 0,
-			Items: []dto.OrderItemInputCreate{
-				{
-					SKU:      "item123",
-					Quantity: 2,
-				},
-			},
-		}
-
-		err := dto.ValidateOrderCreate(input)
-		assert.Error(t, err)
-	})
-
 	t.Run("missing items", func(t *testing.T) {
 		input := dto.OrderInputCreate{
 			ClientID: 1,
