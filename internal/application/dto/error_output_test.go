@@ -1,10 +1,12 @@
 package dto_test
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/application/dto"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/shared/validation"
+	"github.com/test-go/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -57,5 +59,21 @@ func TestErrorsFromValidationErrors(t *testing.T) {
 			assert.Equal(t, "Name is required", result.Errors[0].Message, "Message doesn't match for name")
 			assert.Equal(t, "CPF is invalid", result.Errors[1].Message, "Message doesn't match for cpf")
 		})
+	})
+}
+
+func TestMarshalJSON(t *testing.T) {
+	t.Run("valid value", func(t *testing.T) {
+		ns := dto.NullString{NullString: sql.NullString{String: "test", Valid: true}}
+		data, err := ns.MarshalJSON()
+		require.NoError(t, err)
+		assert.Equal(t, `"test"`, string(data))
+	})
+
+	t.Run("null value", func(t *testing.T) {
+		ns := dto.NullString{NullString: sql.NullString{Valid: false}}
+		data, err := ns.MarshalJSON()
+		require.NoError(t, err)
+		assert.Equal(t, "null", string(data))
 	})
 }

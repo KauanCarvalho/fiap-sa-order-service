@@ -14,7 +14,7 @@ import (
 
 func (d *datastore) CreateClient(ctx context.Context, client *entities.Client) error {
 	if err := d.db.WithContext(ctx).Create(client).Error; err != nil {
-		if isDuplicateCPFError(err) {
+		if isDuplicateErr(err) {
 			return ErrExistingRecord
 		}
 		return internalErrors.NewInternalError("failed to create client", err)
@@ -34,6 +34,18 @@ func (d *datastore) GetClientByID(ctx context.Context, id uint) (*entities.Clien
 	return &client, nil
 }
 
+func (d *datastore) GetClientByCognitoID(ctx context.Context, cognitoID string) (*entities.Client, error) {
+	var client entities.Client
+
+	if err := d.db.WithContext(ctx).Where("cognito_id = ?", cognitoID).First(&client).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		return nil, internalErrors.NewInternalError("failed to get client by Cognito ID", err)
+	}
+	return &client, nil
+}
+
 func (d *datastore) GetClientByCpf(ctx context.Context, cpf string) (*entities.Client, error) {
 	var client entities.Client
 
@@ -46,10 +58,11 @@ func (d *datastore) GetClientByCpf(ctx context.Context, cpf string) (*entities.C
 	return &client, nil
 }
 
-func isDuplicateCPFError(err error) bool {
+func isDuplicateErr(err error) bool {
 	var mysqlErr *mysql.MySQLError
 	if errors.As(err, &mysqlErr) {
-		return mysqlErr.Number == 1062 && strings.Contains(mysqlErr.Message, "cpf")
+		return mysqlErr.Number == 1062 &&
+			(strings.Contains(mysqlErr.Message, "cognito_id") || strings.Contains(mysqlErr.Message, "cpf"))
 	}
 	return false
 }

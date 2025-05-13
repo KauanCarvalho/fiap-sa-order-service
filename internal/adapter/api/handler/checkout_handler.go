@@ -57,6 +57,15 @@ func (ch *CheckoutHandler) Create(c *gin.Context) {
 		return
 	}
 
+	if input.ClientID == 0 && input.CognitoID == "" {
+		c.JSON(http.StatusBadRequest, dto.SimpleAPIErrorsOutput(
+			"",
+			"client_id",
+			"client_id or cognito_id is required",
+		))
+		return
+	}
+
 	order, err := ch.createOrderUseCase.Run(ctx, input)
 	if err != nil {
 		switch {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/adapter/datastore"
 	"github.com/KauanCarvalho/fiap-sa-order-service/internal/core/domain/entities"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -54,6 +55,25 @@ func TestGetClientByID(t *testing.T) {
 
 	t.Run("returns error when client not found", func(t *testing.T) {
 		found, err := ds.GetClientByID(ctx, 999)
+		assert.Nil(t, found)
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	})
+}
+
+func TestGetClientByCognitoID(t *testing.T) {
+	prepareTestDatabase()
+
+	t.Run("successfully gets client by CongitoID", func(t *testing.T) {
+		found, err := ds.GetClientByID(ctx, 1)
+		require.NoError(t, err)
+
+		otherFound, err := ds.GetClientByCognitoID(ctx, found.CognitoID.String)
+		require.NoError(t, err)
+		assert.Equal(t, uint(1), otherFound.ID)
+	})
+
+	t.Run("returns error when client not found", func(t *testing.T) {
+		found, err := ds.GetClientByCognitoID(ctx, uuid.New().String())
 		assert.Nil(t, found)
 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 	})
