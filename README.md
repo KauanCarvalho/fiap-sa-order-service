@@ -91,7 +91,7 @@ Arquivo de configuração: [`sonar-project.properties`](./sonar-project.properti
 
 A cobertura de testes é enviada ao **Codecov** a cada pull request ou push na branch `main`.
 
-Arquivo de configuração: [`codecov.yml`](./codecov.yml)
+Arquivo de configuração: [`codecov.yml`](./.codecov.yml)
 
 **Exclusões definidas:**
 
