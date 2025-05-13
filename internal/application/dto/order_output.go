@@ -3,9 +3,9 @@ package dto
 import "time"
 
 type PaymentOutput struct {
-	Status        string `json:"status"`
-	QRCode        string `json:"qr_code"`
-	PaymentMethod string `json:"payment_method"`
+	Status        string `json:"status,omitempty"`
+	QRCode        string `json:"qr_code,omitempty"`
+	PaymentMethod string `json:"payment_method,omitempty"`
 }
 
 type OrderOutput struct {
@@ -16,5 +16,5 @@ type OrderOutput struct {
 	CreatedAt time.Time         `json:"created_at"`
 	UpdatedAt time.Time         `json:"updated_at"`
 	Items     []OrderItemOutput `json:"items"`
-	Payment   PaymentOutput     `json:"payment"`
+	Payment   PaymentOutput     `json:"payment,omitempty"`
 }
